@@ -12,6 +12,7 @@ import {
   downloadProgram,
 } from "../server/update-release";
 import { programPath, verifyProgram } from "../server/updater";
+import packageInfo from "../package.json";
 
 const release = (version = "0.2.4") => ({
   tag_name: "v" + version,
@@ -83,6 +84,9 @@ test("更新清单拒绝世界路径、目录跳转、被改动的程序和不�
 });
 
 test("管理权限独立于玩家账号；每日自动更新等待空闲且二次核对在线玩家", async (t) => {
+  const nextVersion = packageInfo.version.replace(/\d+$/, (patch) =>
+    String(Number(patch) + 1),
+  );
   const root = await mkdtemp(join(tmpdir(), "fu admin "));
   const oldEnv = { ...process.env };
   Object.assign(process.env, {
@@ -102,7 +106,7 @@ test("管理权限独立于玩家账号；每日自动更新等待空闲且二�
   t.mock.method(globalThis, "fetch", async () => {
     calls++;
     if (joinDuringFetch) online = 1;
-    return Response.json(release());
+    return Response.json(release(nextVersion));
   });
   const routes = adminRoutes({
     read: async () => input,
@@ -150,11 +154,11 @@ test("管理权限独立于玩家账号；每日自动更新等待空闲且二�
     await routes.autoTick(now);
     assert.equal(
       JSON.parse(await readFile(join(root, "request.json"), "utf8")).version,
-      "0.2.4",
+      nextVersion,
     );
     await routes.autoTick(now + 600001);
     assert.equal(calls, 2);
-    input = { version: "0.2.4" };
+    input = { version: nextVersion };
     await assert.rejects(routes.handle("/api/admin/update", req, res), /进行/);
   } finally {
     for (const key of [

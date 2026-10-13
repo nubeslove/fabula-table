@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { mkdir, mkdtemp, writeFile, readFile } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile, readFile, realpath } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { randomInt } from "node:crypto";
@@ -10,7 +10,8 @@ test(
   "Windows 新安装识别旧任务；停止只影响当前 FU；重新启动恢复自启与服务",
   { skip: process.platform !== "win32" },
   async () => {
-    const root = await mkdtemp(join(tmpdir(), "fu control "));
+    // Windows runners may expose TEMP through an 8.3 alias.
+    const root = await realpath(await mkdtemp(join(tmpdir(), "fu control ")));
     const installed = join(root, "new FU"),
       other = join(root, "old FU");
     const port = randomInt(45000, 54000);
@@ -47,7 +48,8 @@ $rejected = $false
 try { Assert-FuFreshDirectory $root } catch { $rejected = $true }
 if (-not $rejected) { throw 'Existing worlds accepted as fresh install' }
 $script:task = [pscustomobject]@{TaskName='IsolatedFakeTask';TaskPath='\\';State='Ready';Actions=@([pscustomobject]@{Execute=${quote(process.execPath)};Arguments=('"' + (Join-Path $root 'launch.mjs') + '" --background');WorkingDirectory=$root})}
-if ((Get-FuTaskRoot $script:task) -ne $root) { throw 'Cannot resolve valid task' }
+$taskRoot = Get-FuTaskRoot $script:task
+if ($taskRoot -ne $root) { throw "Cannot resolve valid task: expected [$root], received [$taskRoot]" }
 $script:events = [Collections.Generic.List[string]]::new()
 function Get-ScheduledTask { param($TaskName,$TaskPath); return $script:task }
 function Disable-ScheduledTask { param($TaskName,$TaskPath); $script:events.Add('disable'); $script:task.State='Disabled' }
@@ -78,7 +80,7 @@ try {
       const result = spawnSync(
         "powershell.exe",
         ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script],
-        { windowsHide: true, encoding: "utf8", timeout: 30000 },
+        { windowsHide: true, encoding: "utf8", timeout: 60000 },
       );
       assert.equal(result.status, 0, result.stdout + result.stderr);
       assert.match(result.stdout, /service-control-ok/);

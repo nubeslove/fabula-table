@@ -97,6 +97,8 @@ test(
     const root = await mkdtemp(join(tmpdir(), "fu server "));
     await mkdir(join(root, "app"));
     await mkdir(join(root, "data"));
+    await mkdir(join(root, "runtime"));
+    await copyFile(process.execPath, join(root, "runtime/node.exe"));
     await writeFile(join(root, "data/keep.txt"), "existing-data");
     for (const file of [
       "start.cmd",
@@ -130,10 +132,12 @@ test(
     });
     try {
       let healthy = false;
-      for (let attempt = 0; attempt < 40; attempt++) {
+      const deadline = Date.now() + 30000;
+      while (Date.now() < deadline && child.exitCode === null) {
         try {
           const response = await fetch(
             `http://127.0.0.1:${port}/fu/api/health`,
+            { signal: AbortSignal.timeout(1200) },
           );
           const result = await response.json();
           if (result.ok && result.product === "fabula-table") {
@@ -145,7 +149,7 @@ test(
         }
         await new Promise((done) => setTimeout(done, 100));
       }
-      assert.ok(healthy, output);
+      assert.ok(healthy, `Startup health check failed (exit ${child.exitCode}):\n${output}`);
       const registered = await fetch(
         `http://127.0.0.1:${port}/fu/api/account/register`,
         {

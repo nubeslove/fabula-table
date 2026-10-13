@@ -1,11 +1,88 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { mkdir, mkdtemp, writeFile, readFile, realpath } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  writeFile,
+  readFile,
+  realpath,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { randomInt } from "node:crypto";
 const quote = (value: string) => "'" + value.replaceAll("'", "''") + "'";
+test(
+  "全新安装可接管旧文件已清除的 FU 任务，普通启停仍拒绝缺失或冲突的身份信息",
+  { skip: process.platform !== "win32" },
+  async () => {
+    const root = await realpath(
+      await mkdtemp(join(tmpdir(), "fu stale task ")),
+    );
+    const previous = join(root, "previous FU");
+    const script = join(root, "verify.ps1");
+    await writeFile(
+      script,
+      "\uFEFF" +
+        `
+$ErrorActionPreference = 'Stop'
+. ${quote(resolve("deploy/upgrade-support.ps1"))}
+$previous = ${quote(previous)}
+$task = [pscustomobject]@{
+    TaskName='FabulaUltima'; TaskPath='\\'; Description="FU 独立站：$previous"
+    Actions=@([pscustomobject]@{Execute=${quote(process.execPath)};Arguments=('"' + (Join-Path $previous 'launch.mjs') + '" --background');WorkingDirectory=$previous})
+}
+function Assert-Rejected($Candidate, [bool]$Fresh) {
+    $rejected = $false
+    try { Get-FuTaskRoot $Candidate -AllowMissingFiles:$Fresh | Out-Null } catch { $rejected = $true }
+    if (-not $rejected) { throw 'Unverified task was accepted' }
+}
+Assert-Rejected $task $false
+$resolved = Get-FuTaskRoot $task -AllowMissingFiles
+if ($resolved -ne $previous) { throw 'Deleted legacy install was not recognized' }
+if (Test-Path -LiteralPath $previous) { throw 'Recognition recreated the old install' }
+New-Item -ItemType Directory -Path (Join-Path $previous 'data') -Force | Out-Null
+[IO.File]::WriteAllText((Join-Path $previous 'data/keep.txt'), 'retained')
+if ((Get-FuTaskRoot $task -AllowMissingFiles) -ne $previous) { throw 'Partial legacy install was not recognized' }
+$task.Description = 'Unrelated Node service'
+Assert-Rejected $task $true
+$task.Description = "FU 独立站：$previous"
+$task.TaskName = 'OtherTask'
+Assert-Rejected $task $true
+$task.TaskName = 'FabulaUltima'
+$task.TaskPath = '\\Other\\'
+Assert-Rejected $task $true
+$task.TaskPath = '\\'
+$task.Actions[0].WorkingDirectory = ${quote(root)}
+Assert-Rejected $task $true
+$task.Actions[0].WorkingDirectory = $previous
+$task.Actions[0].Arguments = '"C:\\unrelated.mjs" --background'
+Assert-Rejected $task $true
+$task.Actions[0].Arguments = '"' + (Join-Path $previous 'launch.mjs') + '" --background'
+New-Item -ItemType Directory -Path (Join-Path $previous 'app') | Out-Null
+$info = Join-Path $previous 'app/build-info.json'
+[IO.File]::WriteAllText($info, '{"product":"unrelated"}')
+Assert-Rejected $task $true
+[IO.File]::WriteAllText($info, '{')
+Assert-Rejected $task $true
+[IO.File]::WriteAllText($info, '{"product":"fabula-table","version":"0.1.6"}')
+if ((Get-FuTaskRoot $task) -ne $previous) { throw 'Intact 0.1.6 install was not recognized' }
+Write-Output 'stale-task-ok'
+`,
+    );
+    const result = spawnSync(
+      "powershell.exe",
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script],
+      { windowsHide: true, encoding: "utf8", timeout: 30000 },
+    );
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stdout, /stale-task-ok/);
+    assert.equal(
+      await readFile(join(previous, "data/keep.txt"), "utf8"),
+      "retained",
+    );
+  },
+);
 test(
   "Windows 新安装识别旧任务；停止只影响当前 FU；重新启动恢复自启与服务",
   { skip: process.platform !== "win32" },

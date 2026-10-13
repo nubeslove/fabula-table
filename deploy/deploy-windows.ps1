@@ -14,7 +14,7 @@ try {
     $taskName = 'FabulaUltima'
     $launch = Join-Path $PSScriptRoot 'launch.mjs'
     $existing = Get-ScheduledTask -TaskName $taskName -TaskPath '\' -ErrorAction SilentlyContinue
-    $previousRoot = Get-FuTaskRoot $existing
+    $previousRoot = Get-FuTaskRoot $existing -AllowMissingFiles:$FreshInstall
     if ($previousRoot -and $previousRoot -ne $PSScriptRoot -and -not $FreshInstall) {
         throw '已有另一个目录的 FU 后台任务。保留世界请使用升级包；重新建立空世界请在新文件夹运行 install.bat。'
     }
@@ -25,6 +25,9 @@ try {
     if ($FreshInstall) {
         Write-Host "全新安装到：$PSScriptRoot。账号、世界和素材从空白开始。"
         if ($previousRoot) { Write-Host "将接管原 FU 后台任务：$previousRoot。原文件夹不再作为当前服务使用。" }
+        if ($previousRoot -and -not (Test-Path -LiteralPath (Join-Path $previousRoot 'app/build-info.json') -PathType Leaf)) {
+            Write-Host '已根据原安装记录确认这是 FU 残留任务；旧程序文件缺失不影响本次全新安装。'
+        }
     }
     Write-Host '1. 用公网 IP / 域名和端口直接访问（HTTP）'
     Write-Host '2. 接入已有网站（例如已有 HTTPS 域名，仍需配置网站转发）'

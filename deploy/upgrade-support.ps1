@@ -1,5 +1,5 @@
 ﻿# Shared Windows deployment, service-control and upgrade helpers.
-function Get-FuTaskRoot($Task) {
+function Get-FuTaskRoot($Task, [switch]$AllowMissingFiles) {
     if (-not $Task) { return $null }
     $actions = @($Task.Actions)
     if ($actions.Count -ne 1 -or [IO.Path]::GetFileName($actions[0].Execute) -ne 'node.exe' -or
@@ -12,9 +12,19 @@ function Get-FuTaskRoot($Task) {
         throw 'FU 后台任务的入口与工作目录不一致，未修改它。'
     }
     $info = Join-Path $root 'app/build-info.json'
-    if (-not (Test-Path -LiteralPath $info -PathType Leaf) -or
-        (Get-Content -LiteralPath $info -Raw -Encoding UTF8 | ConvertFrom-Json).product -ne 'fabula-table') {
-        throw '无法确认原后台任务属于 FU 安装，未修改它。'
+    if (-not (Test-Path -LiteralPath $info -PathType Leaf)) {
+        # Fresh installs may replace a stale task after the old folder was removed.
+        # Require the exact registration made by our installer, not just a task name.
+        if ($AllowMissingFiles -and $Task.TaskName -eq 'FabulaUltima' -and $Task.TaskPath -eq '\' -and
+            $Task.Description -eq "FU 独立站：$root") {
+            return $root
+        }
+        throw "旧后台任务指向：$root。缺少程序标识文件：$info。仅全新安装可接管安装记录完整的旧 FU 任务；当前任务未修改。"
+    }
+    try { $build = Get-Content -LiteralPath $info -Raw -Encoding UTF8 | ConvertFrom-Json }
+    catch { throw "无法读取旧程序标识文件：$info。当前任务未修改。" }
+    if ($build.product -ne 'fabula-table') {
+        throw "旧后台任务指向的程序标识不是 FU：$info。当前任务未修改。"
     }
     return $root
 }

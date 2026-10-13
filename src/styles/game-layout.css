@@ -1,0 +1,921 @@
+/* A game table occupies the viewport. Only bounded reading/editing surfaces scroll. */
+.game-table {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #eeeede;
+}
+.table-header {
+  height: 50px;
+  flex: 0 0 50px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 10px;
+  border-bottom: 1px solid #cdd4c4;
+  background: #fcfbf3;
+  z-index: 30;
+}
+.table-header svg,
+.scene-shortcuts svg,
+.director-settings summary svg,
+.table-menu-grid svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+}
+.table-header button {
+  min-height: 34px;
+  padding: 5px 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border-color: transparent;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.table-header button.selected {
+  background: #dfe8d8;
+  border-color: #bdcdb6;
+}
+.table-header .table-brand {
+  flex: 0 1 235px;
+  min-width: 130px;
+  justify-content: flex-start;
+  padding: 2px 0;
+  text-align: left;
+}
+.table-brand > span {
+  font-size: 29px;
+  color: #a8854d;
+  line-height: 1;
+}
+.table-brand > div {
+  min-width: 0;
+}
+.table-brand strong {
+  display: block;
+  font:
+    600 17px/1.3 Georgia,
+    "SimSun",
+    serif;
+  letter-spacing: 0.1em;
+}
+.table-brand small {
+  display: block;
+  font-size: 11px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.table-navigation {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.table-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.table-presence {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 5px;
+  font-size: 12px;
+}
+.table-presence > span {
+  max-width: 85px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.table-presence b {
+  font-size: 10px;
+  border: 1px solid #bcc6b3;
+  padding: 0 4px;
+  border-radius: 3px;
+}
+.table-presence i {
+  width: 6px;
+  height: 6px;
+  background: #b99852;
+  border-radius: 50%;
+}
+.table-presence.online i {
+  background: #638a68;
+}
+.table-header .table-menu-button {
+  display: none;
+}
+.table-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.table-menu-grid button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+}
+
+.game-table .table-layout {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  position: relative;
+}
+.game-table .table-layout.chat-open {
+  grid-template-columns: minmax(0, 1fr) 300px;
+}
+.game-table .workspace {
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.game-table .stage-section {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.game-table .scene-caption {
+  flex: 0 0 38px;
+  min-height: 38px;
+  gap: 8px;
+  margin: 0;
+  padding: 0 3px;
+}
+.scene-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.scene-type {
+  font-size: 11px;
+  color: #6c755f;
+  flex: 0 0 auto;
+}
+.game-table .scene-caption h2 {
+  font-size: 16px;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scene-hud {
+  min-width: 0;
+  max-width: 42%;
+}
+.game-table .scene-caption .clock-peek {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  height: 36px;
+  padding: 0 8px 0 2px;
+  background: #203e3d;
+  color: #eee5c8;
+  border: 1px solid #9d905d;
+  border-radius: 5px;
+}
+.clock-peek .clock-dial {
+  width: 34px;
+  height: 34px;
+  filter: none;
+}
+.clock-peek-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.clock-peek b {
+  font:
+    14px Georgia,
+    serif;
+  white-space: nowrap;
+}
+.clock-peek small {
+  color: #d0c395;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.scene-shortcuts {
+  display: flex;
+  gap: 4px;
+}
+.game-table .scene-shortcuts button {
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  background: transparent;
+}
+.game-table .stage {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  border-radius: 6px;
+  box-shadow: none;
+}
+.game-table .stage::after {
+  border-radius: 6px;
+  box-shadow: inset 0 0 70px #001a1826;
+}
+.scene-media {
+  position: absolute;
+  inset: 0;
+}
+.scene-media-plane {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.scene-media-plane > img,
+.scene-media-plane > video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.map-tokens {
+  position: absolute;
+  inset: 0;
+}
+.game-table .dialogue {
+  min-height: 0;
+  max-height: 42%;
+  left: 16px;
+  right: 16px;
+  bottom: 12px;
+  padding: 11px 16px;
+  overscroll-behavior: contain;
+}
+.game-table .dialogue p {
+  font-size: 15px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.game-table .dialogue strong {
+  padding-right: 32px;
+}
+.dialogue-hide {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border-color: #cbbd7e55;
+  color: #eee6c9;
+  font-size: 18px;
+}
+.dialogue-reopen {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  z-index: 5;
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #eee6c9;
+  background: #183b35ec;
+  border-color: #b9aa6c99;
+}
+.game-table .cast-stage {
+  inset: 10px 4px 0;
+}
+.game-table .cast-member {
+  bottom: 26px;
+  height: 86%;
+}
+
+.game-table .director {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 6px 8px;
+  border: 1px solid #d4dacb;
+  border-radius: 6px;
+  background: #fcfbf4;
+}
+.director-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.game-table .director-toolbar button,
+.game-table .director-toolbar select {
+  height: 30px;
+  min-height: 30px;
+  padding: 2px 7px;
+  font-size: 12px;
+}
+.speaker-select {
+  width: 135px;
+  flex: 0 1 135px;
+}
+.game-table .director-cast {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 4px;
+  margin: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.game-table .director-cast button {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.director-cast span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.director-cast kbd {
+  font-size: 10px;
+  opacity: 0.6;
+}
+.cue-next {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.director-settings {
+  position: relative;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+.director-settings summary {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 3px 7px;
+  cursor: pointer;
+  font-size: 12px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  list-style: none;
+}
+.director-settings summary::-webkit-details-marker {
+  display: none;
+}
+.director-settings summary:hover,
+.director-settings[open] summary {
+  background: #e6ecde;
+  border-color: #c1cbb7;
+}
+.director-settings summary:focus-visible {
+  outline: 3px solid #ba995c;
+  outline-offset: 1px;
+}
+.director-settings-popover {
+  position: absolute;
+  z-index: 15;
+  bottom: calc(100% + 8px);
+  right: 0;
+  width: min(320px, calc(100vw - 34px));
+  max-height: min(400px, 65dvh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #bbc7b0;
+  border-radius: 7px;
+  padding: 14px;
+  background: #fcfbf1;
+  box-shadow: 0 8px 25px #112a3540;
+}
+.director-settings-popover > strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+.director-settings-popover .field {
+  margin-bottom: 10px;
+}
+.director-settings-popover small {
+  font-size: 12px;
+}
+.game-table .director-settings-popover .cue-controls {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+.director-settings-popover .cue-controls p {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  margin-bottom: 8px;
+}
+.game-table .compose {
+  display: flex;
+  margin-top: 6px;
+  gap: 6px;
+  align-items: stretch;
+}
+.game-table .compose textarea {
+  flex: 1;
+  height: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  padding: 7px 9px;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+}
+.game-table .compose button {
+  flex: 0 0 92px;
+  width: 92px;
+  padding: 3px 6px;
+  font-size: 13px;
+}
+.game-table .compose button span {
+  display: block;
+  font-size: 10px;
+  opacity: 0.65;
+}
+
+.game-table .table-sidebar {
+  display: none;
+  position: static;
+  top: auto;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+.game-table .table-sidebar.is-open {
+  display: flex;
+}
+.game-table .clock-hud {
+  padding: 8px 10px;
+  margin: 0;
+  border-radius: 0;
+  max-height: 48%;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.game-table .clock-hud > header {
+  padding-bottom: 3px;
+}
+.game-table .clock-hud button:hover:not(:disabled) {
+  background: #ffffff12;
+  border-color: #cbb779;
+}
+.game-table .dialogue-hide:hover,
+.game-table .dialogue-reopen:hover {
+  background: #31564a;
+  color: #fff8e3;
+}
+.game-table .clock-hud .eyebrow {
+  letter-spacing: 0.05em;
+}
+.game-table .clock-feature {
+  padding: 2px 0 4px;
+}
+.game-table .clock-feature .clock-dial {
+  width: 80px;
+  height: 80px;
+}
+.game-table .clock-feature h3 {
+  font-size: 15px;
+  margin: 3px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.game-table .clock-feature p {
+  font-size: 12px;
+  -webkit-line-clamp: 2;
+}
+.game-table .clock-more {
+  padding: 5px 0;
+  margin-top: 3px;
+}
+.game-table .clock-hud-empty {
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.game-table .clock-hud-empty > span {
+  display: none;
+}
+.game-table .clock-hud-empty p {
+  font-size: 11px;
+  margin: 0;
+}
+.game-table .clock-hud-empty button {
+  padding: 4px 6px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.game-table .table-sidebar .log-panel {
+  min-height: 0;
+  height: auto;
+  flex: 1;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+}
+.game-table .log-panel > header {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+}
+.game-table .log-panel > header .eyebrow {
+  display: none;
+}
+.game-table .log-panel > header .row {
+  gap: 4px;
+  margin: 0;
+}
+.game-table .log-filter {
+  flex: 0 0 auto;
+  padding: 0 10px 6px;
+}
+.game-table .log-filter button {
+  min-height: 28px;
+  font-size: 11px;
+}
+.game-table .log-scroll {
+  min-height: 0;
+  flex: 1;
+  padding: 4px 12px;
+}
+.game-table .log-entry p {
+  font-size: 13px;
+  line-height: 1.75;
+}
+.game-table .log-entry.system p {
+  font-size: 12px;
+}
+.game-table .chat-compose {
+  flex: 0 0 auto;
+  padding: 8px 10px;
+}
+.game-table .chat-compose textarea {
+  height: 50px;
+  min-height: 50px;
+  max-height: 50px;
+  resize: none;
+  font-size: 13px;
+}
+.game-table .chat-compose small {
+  font-size: 10px;
+}
+.game-table .chat-compose button {
+  min-height: 30px;
+}
+.game-table .log-panel footer {
+  display: none;
+}
+
+.table-drawer {
+  position: absolute;
+  z-index: 20;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  width: min(740px, calc(100% - 12px));
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #b8c5ad;
+  border-radius: 7px;
+  overflow: hidden;
+  background: #f8f7ed;
+  box-shadow: 4px 0 28px #142f3538;
+}
+.table-drawer > header {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 12px;
+  border-bottom: 1px solid #cfd7c4;
+  background: #fdfbf3;
+}
+.table-drawer > header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.table-drawer > header button {
+  padding: 3px 9px;
+  min-height: 32px;
+  font-size: 12px;
+}
+.table-drawer-body {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 14px;
+}
+.table-drawer-body > section > .section-heading .eyebrow {
+  display: none;
+}
+.table-drawer-body .section-heading {
+  margin-bottom: 14px;
+  gap: 10px;
+}
+.table-drawer-body .section-heading h2 {
+  font-size: 19px;
+}
+.table-drawer-body .character-grid,
+.table-drawer-body .scene-grid {
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(min(275px, 100%), 1fr));
+}
+.table-drawer-body .character-card {
+  padding: 13px;
+  gap: 12px;
+}
+.table-drawer-body .character-card > .portrait {
+  flex-basis: 65px;
+  height: 85px;
+}
+.table-drawer-body .book-page {
+  padding: 14px;
+  min-width: 0;
+}
+.game-table .modal[open] {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 24px);
+  overflow: hidden;
+  margin: auto;
+}
+.game-table .modal > header {
+  flex-shrink: 0;
+  padding: 12px 16px;
+}
+.game-table .modal-body {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 16px;
+}
+.first-character-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  text-align: center;
+}
+.first-character-prompt > span {
+  font:
+    48px/1.2 Georgia,
+    serif;
+  color: #a28048;
+}
+.first-character-prompt p {
+  max-width: 36em;
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+.first-character-prompt > button {
+  min-width: 200px;
+  min-height: 42px;
+}
+.first-character-prompt small {
+  font-size: 12px;
+}
+.game-table > .connection-warning,
+.game-table > .notice {
+  flex: 0 0 auto;
+  max-height: 80px;
+  overflow: auto;
+  margin: 0;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.game-table .toast {
+  top: 55px;
+}
+
+@media (max-width: 1100px) {
+  .table-header {
+    gap: 6px;
+  }
+  .table-navigation button {
+    padding: 5px 7px;
+  }
+  .table-presence > span {
+    display: none;
+  }
+  .table-header .table-brand {
+    flex-basis: 190px;
+  }
+}
+@media (max-width: 999px) {
+  .game-table .table-layout.chat-open {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .game-table .table-sidebar {
+    position: absolute;
+    z-index: 25;
+    top: 6px;
+    bottom: 6px;
+    right: 6px;
+    height: auto;
+    width: min(340px, calc(100% - 12px));
+    border: 1px solid #acbea0;
+    border-radius: 7px;
+    box-shadow: -5px 0 28px #142f3540;
+  }
+  .table-navigation button span {
+    display: none;
+  }
+  .game-table .director-cast {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  .table-header {
+    gap: 4px;
+    padding: 0 6px;
+    height: 52px;
+    flex-basis: 52px;
+  }
+  .table-header button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 7px;
+  }
+  .table-header .table-brand {
+    min-width: 0;
+    flex: 1;
+  }
+  .table-brand > span {
+    font-size: 25px;
+  }
+  .table-brand strong {
+    font-size: 16px;
+  }
+  .table-brand small {
+    max-width: 160px;
+  }
+  .table-presence {
+    display: none;
+  }
+  .table-navigation {
+    display: none;
+  }
+  .table-header .table-menu-button {
+    display: flex;
+  }
+  .table-header-actions {
+    gap: 0;
+  }
+  .game-table .workspace {
+    padding: 4px;
+  }
+  .game-table .stage-section {
+    gap: 4px;
+  }
+  .game-table .scene-caption {
+    padding: 0;
+    gap: 5px;
+    min-height: 42px;
+    flex-basis: 42px;
+  }
+  .game-table .scene-caption h2 {
+    font-size: 14px;
+  }
+  .scene-type,
+  .scene-shortcuts {
+    display: none;
+  }
+  .scene-hud {
+    max-width: 62%;
+  }
+  .game-table .scene-caption .clock-peek {
+    min-height: 38px;
+  }
+  .clock-peek-name {
+    font-size: 12px;
+  }
+  .game-table .director {
+    padding: 6px;
+  }
+  .game-table .director-toolbar select,
+  .game-table .director-toolbar button,
+  .director-settings summary {
+    height: 36px;
+    min-height: 36px;
+  }
+  .game-table .compose {
+    flex-direction: row;
+  }
+  .game-table .compose textarea {
+    font-size: 16px;
+  }
+  .game-table .compose button {
+    flex-basis: 82px;
+    width: 82px;
+  }
+  .game-table .dialogue {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    padding: 9px 12px;
+  }
+  .game-table .dialogue p {
+    font-size: 14px;
+  }
+  .table-drawer {
+    left: 4px;
+    top: 4px;
+    bottom: 4px;
+    width: calc(100% - 8px);
+  }
+  .table-drawer-body {
+    padding: 10px;
+  }
+  .table-drawer > header button {
+    min-height: 40px;
+  }
+  .game-table .modal[open] {
+    width: calc(100% - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+  .game-table .modal > header {
+    padding: 10px 12px;
+  }
+  .game-table .modal-body {
+    padding: 12px;
+  }
+  .game-table .modal .tabs {
+    flex-wrap: wrap;
+  }
+}
+@media (max-height: 600px) {
+  .table-header {
+    height: 44px;
+    flex-basis: 44px;
+  }
+  .table-brand small {
+    display: none;
+  }
+  .game-table .scene-caption {
+    min-height: 34px;
+    flex-basis: 34px;
+  }
+  .game-table .stage-section {
+    gap: 4px;
+  }
+  .game-table .director {
+    padding: 4px 6px;
+  }
+  .game-table .compose {
+    margin-top: 4px;
+  }
+  .game-table .compose textarea {
+    height: 42px;
+    min-height: 42px;
+    max-height: 42px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-table *,
+  .game-table *::before,
+  .game-table *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

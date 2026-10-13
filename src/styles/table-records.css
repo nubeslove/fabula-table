@@ -1,0 +1,710 @@
+.table-layout {
+  grid-template-columns: minmax(0, 1fr) 338px;
+}
+.table-sidebar {
+  min-width: 0;
+  height: calc(100dvh - 78px);
+  min-height: 430px;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+  background: #f9f7ee;
+}
+.table-sidebar [hidden] {
+  display: none !important;
+}
+.table-sidebar .log-panel {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  position: static;
+  border: 0;
+  background: transparent;
+}
+.table-sidebar .log-panel.collapsed {
+  flex: 0 0 auto;
+}
+.table-sidebar .log-panel > header {
+  padding: 15px 16px 10px;
+  gap: 8px;
+}
+.table-sidebar .log-panel > header button {
+  font-size: 11px;
+  padding: 4px 7px;
+}
+.table-sidebar .log-scroll {
+  min-height: 0;
+  padding: 8px 17px;
+  overscroll-behavior: contain;
+}
+.table-sidebar .log-entry {
+  padding: 11px 0;
+}
+.table-sidebar .log-panel footer {
+  padding: 8px 15px;
+}
+.log-filter {
+  display: flex;
+  gap: 5px;
+  padding: 0 16px 9px;
+  border-bottom: 1px solid var(--border);
+}
+.log-filter button {
+  font-size: 10px;
+  padding: 3px 12px;
+  background: none;
+}
+.log-filter button.selected {
+  background: #e3e9dc;
+}
+.log-entry-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+.log-entry-actions button {
+  font-size: 10px;
+  padding: 2px 5px;
+  color: #788465;
+}
+.chat-label {
+  font-size: 9px;
+  margin-left: 6px;
+  color: #8a917e;
+  font-weight: 400;
+}
+.chat-compose {
+  margin: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: #f0efe4;
+}
+.chat-compose textarea {
+  min-height: 54px;
+  max-height: 110px;
+  font-size: 12px;
+  line-height: 1.6;
+  resize: vertical;
+  background: #fffdf6;
+}
+.chat-compose > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 5px;
+}
+.chat-compose small {
+  font-size: 9px;
+  color: #7c846e;
+}
+.chat-compose button {
+  padding: 5px 16px;
+  font-size: 11px;
+}
+
+.clock-goal {
+  --dial-light: #f3db94;
+  --dial-accent: #bda65c;
+}
+.clock-danger {
+  --dial-light: #ffd0ab;
+  --dial-accent: #d37c6c;
+}
+.clock-discovery {
+  --dial-light: #b8e6f2;
+  --dial-accent: #6babc8;
+}
+.clock-journey {
+  --dial-light: #d5edbb;
+  --dial-accent: #7cba9d;
+}
+.clock-dial {
+  display: block;
+  width: 128px;
+  height: 128px;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 3px 5px #0002);
+  overflow: visible;
+}
+.dial-number {
+  font:
+    32px Georgia,
+    "Times New Roman",
+    serif;
+  fill: #fff4cf;
+}
+.dial-symbol {
+  font-size: 11px;
+  fill: var(--dial-light);
+}
+.dial-total {
+  font:
+    10px Georgia,
+    serif;
+  letter-spacing: 0.12em;
+  fill: #bcc9bf;
+}
+.dial-filled {
+  transition: fill 0.2s ease;
+}
+.clock-hud {
+  flex: 0 0 auto;
+  background:
+    radial-gradient(ellipse at 10% 0%, #2c4a49, transparent 70%), #182f34;
+  color: #f2ead1;
+  padding: 15px 15px 12px;
+  border-bottom: 2px solid #a38c5d;
+  position: relative;
+  isolation: isolate;
+}
+.clock-hud::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  inset: 5px;
+  border: 1px solid #c5ad7330;
+  z-index: -1;
+}
+.clock-hud > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 8px;
+}
+.clock-hud .eyebrow {
+  color: #d1bd86;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+}
+.clock-hud button {
+  color: inherit;
+  border-color: #c9bd8055;
+}
+.clock-hud > header button {
+  background: transparent;
+  font-size: 10px;
+  padding: 4px 7px;
+}
+.clock-feature {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 3px 0 7px;
+  border: 0;
+  border-radius: 0;
+  text-align: left;
+  background: transparent;
+}
+.clock-feature:hover {
+  background: #fff8d509;
+}
+.clock-feature .clock-dial {
+  width: 116px;
+  height: 116px;
+}
+.clock-feature-copy {
+  min-width: 0;
+  flex: 1;
+}
+.clock-kind {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--dial-light, #ead7a0);
+}
+.clock-feature h3 {
+  font-size: 17px;
+  line-height: 1.45;
+  color: #fff1d0;
+  margin: 5px 0;
+  font-family: Georgia, "Noto Serif SC", "SimSun", serif;
+  overflow-wrap: anywhere;
+}
+.clock-feature p {
+  color: #c0cebd;
+  font-size: 11px;
+  line-height: 1.65;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.clock-full {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: #efd18c;
+}
+.clock-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 5px 0;
+}
+.clock-controls button {
+  min-width: 31px;
+  height: 29px;
+  padding: 0;
+  font-size: 16px;
+}
+.clock-controls select {
+  width: 100px;
+  padding: 4px 8px;
+  font-size: 11px;
+  height: 29px;
+}
+.clock-controls > span {
+  font-size: 9px;
+  margin-left: auto;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+.clock-hud .clock-controls button,
+.clock-hud .clock-controls select {
+  background: #ffffff0a;
+  color: #f4edda;
+  border: 1px solid #c7bd8950;
+}
+.clock-hud .clock-controls option {
+  background: #213c40;
+  color: #f4edda;
+}
+.clock-hud button:focus-visible {
+  outline: 2px solid #e6d092;
+  outline-offset: 2px;
+}
+.clock-more {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  border: 0;
+  border-top: 1px solid #b6b68b2b;
+  border-radius: 0;
+  background: transparent;
+  margin-top: 6px;
+  padding: 9px 0 5px;
+  font-size: 10px;
+  color: #cdd5c4 !important;
+}
+.clock-more span {
+  color: #d5be8b;
+  font-size: 9px;
+}
+.clock-companions {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #768973 transparent;
+  padding-bottom: 3px;
+}
+.clock-companions > button {
+  flex: 0 0 89px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 5px;
+  background: #ffffff04;
+  border: 1px solid #9eab813b;
+  border-radius: 7px;
+}
+.clock-companions .clock-dial {
+  width: 47px;
+  height: 47px;
+}
+.clock-companions strong {
+  width: 100%;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.45;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.clock-companions small {
+  font-size: 9px;
+  color: #b7c6b6;
+}
+.clock-companions.expanded {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-height: 210px;
+  overflow-y: auto;
+}
+.clock-hud-empty {
+  text-align: center;
+  padding: 15px 7px;
+}
+.clock-hud-empty > span {
+  font-size: 35px;
+  color: #d5c18c;
+}
+.clock-hud-empty p {
+  font-size: 11px;
+  color: #c6cfbc;
+}
+.clock-hud-empty button {
+  background: #50665066;
+  font-size: 11px;
+}
+
+.clock-manager {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 26px;
+}
+.clock-directory {
+  border-right: 1px solid var(--border);
+  padding-right: 16px;
+}
+.clock-directory > button {
+  width: 100%;
+}
+.clock-directory > label {
+  margin: 13px 0;
+  font-size: 11px;
+}
+.clock-directory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 580px;
+  overflow-y: auto;
+}
+.clock-directory-list > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  min-width: 0;
+  padding: 7px;
+  background: #eeeee1;
+  border-color: transparent;
+}
+.clock-directory-list > button.selected {
+  border-color: #b59a5e;
+  background: #e3e9d8;
+}
+.clock-directory-list .clock-dial {
+  width: 48px;
+  height: 48px;
+}
+.clock-directory-list strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.clock-directory-list small {
+  display: block;
+  margin-top: 4px;
+  font-size: 9px;
+  color: #6d7c64;
+}
+.clock-details {
+  min-width: 0;
+}
+.clock-detail-preview {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 20px;
+  margin-bottom: 14px;
+  background: radial-gradient(ellipse at top left, #2c4a49, #172e34);
+  color: #f1e6c8;
+  border: 1px solid #a68c57;
+  border-radius: 12px;
+}
+.clock-detail-preview .clock-dial {
+  width: 144px;
+  height: 144px;
+}
+.clock-detail-preview > div {
+  min-width: 0;
+}
+.clock-detail-preview h3 {
+  font-size: 22px;
+  color: #f6e7bf;
+  margin: 4px 0 9px;
+  font-family: Georgia, "SimSun", serif;
+  overflow-wrap: anywhere;
+}
+.clock-detail-preview p {
+  font-size: 12px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.clock-detail-preview strong {
+  font-size: 11px;
+  display: block;
+  margin-top: 8px;
+  color: #eac582;
+}
+.clock-details > .clock-controls {
+  max-width: 280px;
+  margin: 0 0 18px;
+}
+.clock-save-row {
+  margin-top: 17px;
+}
+.clock-save-row span {
+  font-size: 12px;
+  color: var(--green);
+}
+
+.journal-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.journal-filters > input {
+  flex: 1 1 250px;
+  width: auto;
+}
+.journal-filters select {
+  width: 120px;
+}
+.journal-filters label {
+  font-size: 11px;
+}
+.journal-filters button {
+  font-size: 12px;
+}
+.journal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.journal-card {
+  padding: 22px;
+  border: 1px solid #c9d1b8;
+  background: #fffdf4;
+  border-radius: 10px;
+  box-shadow: 0 5px 14px #33492207;
+  min-width: 0;
+}
+.journal-card.archived {
+  background: #edece3;
+}
+.journal-symbol {
+  color: #a78d55;
+  font-size: 24px;
+}
+.journal-card h3 {
+  font-size: 19px;
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.journal-card > p {
+  font-size: 13px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 310px;
+  overflow-y: auto;
+}
+.journal-card footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: 15px;
+}
+.journal-card footer small {
+  font-size: 10px;
+  color: #7c866f;
+}
+.journal-card footer button {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+@media (min-width: 1700px) {
+  .table-layout {
+    grid-template-columns: minmax(0, 1fr) 370px;
+  }
+  .clock-feature .clock-dial {
+    width: 132px;
+    height: 132px;
+  }
+}
+@media (max-width: 1200px) {
+  .table-layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .clock-feature .clock-dial {
+    width: 104px;
+    height: 104px;
+  }
+  .clock-feature h3 {
+    font-size: 16px;
+  }
+  .journal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 960px) {
+  .table-layout {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+  .table-sidebar {
+    height: calc(100dvh - 125px);
+  }
+  .clock-hud {
+    padding: 12px;
+  }
+  .clock-feature .clock-dial {
+    width: 92px;
+    height: 92px;
+  }
+  .clock-feature p {
+    -webkit-line-clamp: 2;
+  }
+  .clock-manager {
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 17px;
+  }
+  .clock-detail-preview {
+    gap: 10px;
+    padding: 14px;
+  }
+  .clock-detail-preview .clock-dial {
+    width: 100px;
+    height: 100px;
+  }
+}
+@media (max-width: 720px) {
+  .table-layout {
+    display: flex;
+    flex-direction: column;
+  }
+  .table-sidebar {
+    display: contents;
+  }
+  .clock-hud {
+    order: -1;
+    margin: 12px 14px 0;
+    padding: 10px 12px;
+    border: 1px solid #a38c5d;
+    border-radius: 10px;
+  }
+  .clock-hud > header {
+    padding-bottom: 0;
+  }
+  .clock-feature {
+    gap: 12px;
+    padding: 0;
+  }
+  .clock-feature .clock-dial {
+    width: 82px;
+    height: 82px;
+  }
+  .clock-feature h3 {
+    font-size: 17px;
+    margin: 3px 0;
+  }
+  .clock-feature p {
+    font-size: 11px;
+    -webkit-line-clamp: 2;
+  }
+  .clock-hud .clock-controls {
+    padding-top: 2px;
+    max-width: 290px;
+    margin-left: auto;
+  }
+  .clock-companions {
+    display: none;
+  }
+  .clock-companions.expanded {
+    display: flex;
+    max-height: none;
+  }
+  .clock-companions > button {
+    flex-direction: row;
+    flex: 0 0 190px;
+    flex-wrap: wrap;
+    text-align: left;
+    gap: 6px;
+    padding: 6px;
+  }
+  .clock-companions .clock-dial {
+    width: 35px;
+    height: 35px;
+  }
+  .clock-companions strong {
+    width: 130px;
+  }
+  .clock-companions small {
+    margin-left: 40px;
+  }
+  .table-sidebar .log-panel {
+    order: 2;
+    flex: auto;
+    height: 520px;
+    min-height: 0;
+    position: static;
+    margin: 0 14px 20px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .table-sidebar .log-panel.collapsed {
+    height: auto;
+  }
+  .clock-manager {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  .clock-directory {
+    padding: 0 0 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .clock-directory-list {
+    flex-direction: row;
+    max-height: none;
+    overflow-x: auto;
+  }
+  .clock-directory-list > button {
+    flex: 0 0 180px;
+  }
+  .clock-directory-list .clock-dial {
+    width: 40px;
+    height: 40px;
+  }
+  .clock-detail-preview h3 {
+    font-size: 19px;
+  }
+  .clock-detail-preview .clock-dial {
+    width: 100px;
+    height: 100px;
+  }
+  .journal-card {
+    padding: 18px;
+  }
+  .journal-filters {
+    gap: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dial-filled {
+    transition: none;
+  }
+}

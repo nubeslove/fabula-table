@@ -1,0 +1,873 @@
+.fu-lobby {
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #f4f2e8;
+  padding: 24px clamp(16px, 4vw, 64px);
+  gap: 20px;
+  color: #203e3d;
+}
+.lobby-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: none;
+  border-bottom: 1px solid #cbd1bb;
+  padding-bottom: 18px;
+}
+.lobby-header h1 {
+  font:
+    600 30px Georgia,
+    serif;
+  margin: 4px 0 0;
+}
+.button-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.lobby-auth {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  max-width: 920px;
+  width: 100%;
+  margin: auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+}
+.lobby-auth > div {
+  align-self: center;
+}
+.lobby-auth h2 {
+  font-size: 32px;
+}
+.lobby-auth p {
+  line-height: 1.9;
+}
+.lobby-auth form {
+  border: 1px solid #c7ceba;
+  background: #fffdf6;
+  border-radius: 12px;
+  padding: 24px;
+}
+.lobby-auth .brand-symbol {
+  color: #b29348;
+}
+.lobby-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  flex: none;
+}
+.lobby-toolbar input {
+  flex: 1;
+  min-width: 130px;
+}
+.lobby-toolbar .tabs {
+  margin: 0;
+}
+.lobby-rooms {
+  overflow: auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 350px), 1fr));
+  gap: 14px;
+  align-content: start;
+  padding: 2px;
+}
+.lobby-room {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+  border: 1px solid #c7ceba;
+  background: #fffdf6;
+  border-radius: 8px;
+  padding: 18px;
+  flex-wrap: wrap;
+}
+.lobby-world-mark {
+  font-size: 35px;
+  color: #a38b49;
+  width: 44px;
+}
+.lobby-room > div:nth-child(2) {
+  flex: 1;
+  min-width: 180px;
+}
+.lobby-room h2 {
+  font-size: 20px;
+  margin: 5px 0;
+  overflow-wrap: anywhere;
+}
+.lobby-room p {
+  font-size: 12px;
+  margin: 6px 0;
+  color: #637366;
+}
+.lobby-room-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: flex-end;
+}
+.lobby-room small {
+  color: #747a53;
+}
+.lobby-world-form {
+  display: grid;
+  gap: 12px;
+}
+.expansion-picker {
+  border: 1px solid #c7ceba;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+  margin: 8px 0;
+}
+.expansion-picker label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 6px;
+}
+.expansion-picker input {
+  width: auto;
+  flex: none;
+  margin-top: 5px;
+}
+.expansion-picker strong,
+.expansion-picker small {
+  display: block;
+}
+.expansion-picker small {
+  line-height: 1.5;
+  margin-top: 4px;
+  color: #6b7567;
+}
+.world-settings {
+  padding: 16px;
+}
+.world-settings > label:not(.field) {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.world-settings input[type="checkbox"] {
+  width: auto;
+}
+.game-table .scene-caption {
+  min-height: 58px;
+  flex-basis: 58px;
+}
+.clock-strip {
+  height: 56px;
+}
+.game-table .scene-caption .clock-strip-item {
+  height: 52px;
+  width: 100%;
+}
+.clock-strip-item .clock-dial {
+  height: 48px;
+  width: 48px;
+  flex-basis: 48px;
+}
+.clock-strip-cell {
+  position: relative;
+  min-width: 0;
+}
+.clock-quick {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  display: flex;
+  gap: 3px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  background: #16393a;
+  border-radius: 4px;
+  padding: 2px;
+}
+.clock-quick button {
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  background: #203e3d;
+  color: #f8e6a4;
+  border: 1px solid #9b925f;
+}
+.clock-strip-cell:hover .clock-quick,
+.clock-strip-cell:focus-within .clock-quick,
+.battle-clock:hover .clock-quick,
+.battle-clock:focus-within .clock-quick {
+  opacity: 1;
+  pointer-events: auto;
+}
+.battle-clocks {
+  position: absolute;
+  z-index: 2;
+  width: 38%;
+  max-width: 490px;
+  color: #f4e9bb;
+  pointer-events: none;
+}
+.battle-clocks.upper {
+  left: 3%;
+  top: 21%;
+}
+.battle-clocks.lower {
+  right: 3%;
+  bottom: 19%;
+}
+.battle-clocks > header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-start;
+  height: 25px;
+  font-size: 11px;
+  letter-spacing: 0.07em;
+}
+.battle-clocks > header > span {
+  margin-right: auto;
+}
+.battle-clocks > header button {
+  pointer-events: auto;
+  min-height: 22px;
+  height: 22px;
+  padding: 0 7px;
+  color: #e5dbb1;
+  background: #19343b;
+  border-color: #899571;
+}
+.battle-clocks-row {
+  display: flex;
+  gap: 9px;
+}
+.battle-clock {
+  position: relative;
+  flex: 1;
+  max-width: 140px;
+  min-width: 0;
+  pointer-events: auto;
+}
+.battle-clock-open {
+  background: transparent;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  width: 100%;
+  color: inherit;
+}
+.battle-clock .clock-dial {
+  height: clamp(44px, 8vw, 105px);
+  width: 100%;
+  filter: drop-shadow(0 3px 8px #071e2c);
+}
+.battle-clock strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  text-shadow: 0 1px 4px #071c26;
+}
+.battle-clock small {
+  font-size: 11px;
+}
+.battle-clock .clock-quick {
+  top: 28%;
+  bottom: auto;
+  right: 50%;
+  transform: translateX(50%);
+}
+.battle-action-drawer {
+  position: absolute;
+  z-index: 8;
+  left: 12px;
+  bottom: 82px;
+  width: min(600px, calc(100% - 24px));
+  height: min(300px, 43%);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 10px 12px;
+  background: #f9f7ee;
+  color: #203e3d;
+  border: 1px solid #b8ab75;
+  border-radius: 10px 10px 5px 5px;
+  box-shadow: 0 -8px 30px #082a3740;
+  animation: action-rise 0.18s ease-out;
+}
+.battle-action-drawer > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: none;
+  margin-bottom: 8px;
+}
+.battle-action-drawer header small,
+.battle-action-drawer header strong {
+  display: block;
+}
+.battle-action-drawer header small {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #76794f;
+}
+.battle-action-drawer header button {
+  padding: 5px 9px;
+  min-height: 30px;
+}
+.battle-action-drawer .character-vitals {
+  margin-bottom: 8px;
+}
+.battle-action-drawer .vital {
+  padding: 5px 8px;
+}
+.battle-action-drawer .vital strong {
+  font-size: 20px;
+}
+.battle-action-content {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.battle-action-content > p.muted {
+  font-size: 11px;
+  margin: 7px 0;
+}
+.battle-action-content .form-grid {
+  gap: 8px;
+}
+.battle-action-content .field {
+  margin-bottom: 7px;
+}
+.battle-ability-list details {
+  padding: 8px;
+  border-bottom: 1px solid #ced2c0;
+}
+.battle-ability-list summary {
+  display: flex;
+  gap: 10px;
+  cursor: pointer;
+  align-items: center;
+}
+.battle-ability-list summary small {
+  font-size: 11px;
+  margin-left: auto;
+  color: #748076;
+}
+.battle-ability-list .preserve {
+  font-size: 13px;
+  line-height: 1.8;
+}
+.character-vitals {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  flex: none;
+}
+.vital {
+  border: 1px solid #d0d1bb;
+  border-left: 3px solid var(--vital);
+  border-radius: 5px;
+  padding: 8px 10px;
+  background: #fffdf6;
+  --vital: #5c8372;
+}
+.vital.hp {
+  --vital: #8d453e;
+}
+.vital.mp {
+  --vital: #3e7193;
+}
+.vital.ip {
+  --vital: #6a7952;
+}
+.vital.fabula {
+  --vital: #ae862e;
+}
+.vital > span:first-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--vital);
+}
+.vital small {
+  font-size: 11px;
+  font-weight: 400;
+}
+.vital strong {
+  font:
+    600 27px Georgia,
+    serif;
+  display: block;
+  margin: 2px 0;
+}
+.vital strong small {
+  font-family: inherit;
+  color: #849184;
+  font-size: 13px;
+}
+.vital-track {
+  display: block;
+  height: 3px;
+  background: #dddccc;
+}
+.vital-track i {
+  display: block;
+  height: 100%;
+  background: var(--vital);
+}
+.tools-workspace {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+.tools-workspace > .section-heading {
+  display: none;
+}
+.tools-workspace .tabs {
+  margin: 0;
+  flex: none;
+}
+.tools-workspace .actor-focus {
+  margin: 0;
+  flex: none;
+  gap: 10px;
+}
+.tools-workspace .actor-focus .portrait {
+  width: 40px;
+  height: 40px;
+}
+.tools-workspace.combat {
+  overflow: auto;
+}
+.tools-workspace.actions > .battle-action-content {
+  flex: 1;
+}
+.tools-workspace .actor-focus select {
+  min-width: 0;
+  flex: 1;
+}
+.character-sheet.modal.wide {
+  width: min(1100px, 96vw);
+  height: min(840px, 94dvh);
+  max-height: 94dvh;
+}
+.character-sheet .modal-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 12px;
+  gap: 10px;
+  min-height: 0;
+  flex: 1;
+}
+.character-sheet-masthead {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  gap: 16px;
+  align-items: center;
+  flex: none;
+}
+.sheet-identity {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+.sheet-identity > b {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 60px;
+  font: 28px Georgia;
+  color: white;
+  border-radius: 4px;
+  flex: none;
+}
+.sheet-identity > div {
+  min-width: 0;
+}
+.sheet-identity small,
+.sheet-identity strong,
+.sheet-identity span {
+  display: block;
+}
+.sheet-identity small {
+  font-size: 11px;
+  color: #68766b;
+}
+.sheet-identity strong {
+  font-size: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sheet-identity span {
+  font-size: 12px;
+  color: #6d776d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sheet-defenses {
+  display: flex;
+  gap: 20px;
+  padding: 6px 10px;
+  background: #e8ecdf;
+  flex: none;
+  font-size: 12px;
+}
+.sheet-defenses b {
+  margin-left: 8px;
+}
+.character-sheet .sheet-tabs {
+  flex: none;
+  margin: 0;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.sheet-tabs button {
+  padding: 7px 12px;
+}
+.sheet-page {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 4px 6px 10px 0;
+}
+.sheet-page .field {
+  margin-bottom: 10px;
+}
+.sheet-page h3 {
+  margin: 8px 0;
+}
+.sheet-page .class-block {
+  margin: 10px 0;
+  padding: 12px;
+  border-top: 3px solid #b2964f;
+}
+.class-tabs {
+  flex-wrap: wrap;
+}
+.sheet-page .attribute-grid {
+  margin-top: 16px;
+}
+.sheet-problems {
+  flex: none;
+  max-height: 100px;
+  overflow: auto;
+  background: #f4edd6;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.sheet-problems p {
+  margin: 4px 0;
+}
+.character-sheet .modal-footer {
+  flex: none;
+  margin: 0;
+  padding-top: 6px;
+  border-top: 1px solid #d0d1bd;
+  justify-content: space-between;
+}
+.character-sheet .modal-footer small {
+  font-size: 11px;
+}
+.log-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.game-table .log-filter button {
+  padding: 4px 7px;
+  font-size: 11px;
+  min-height: 27px;
+}
+.chat-identity {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.chat-identity select {
+  height: 30px;
+  min-height: 30px;
+  padding: 3px 5px;
+  font-size: 12px;
+  min-width: 0;
+}
+.chat-identity select:first-child {
+  width: 63px;
+  flex: none;
+}
+.chat-identity select:nth-child(2) {
+  flex: 1;
+}
+.chat-identity strong {
+  font-size: 12px;
+}
+.game-table .chat-compose .chat-identity {
+  display: flex;
+}
+@keyframes action-rise {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@media (hover: none) {
+  .clock-quick {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle-action-drawer {
+    animation: none;
+  }
+  .clock-quick {
+    transition: none;
+  }
+}
+@media (max-width: 700px) {
+  .fu-lobby {
+    padding: 12px;
+    gap: 12px;
+  }
+  .lobby-header {
+    padding-bottom: 10px;
+  }
+  .lobby-auth {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .lobby-auth > div {
+    display: none;
+  }
+  .lobby-auth form {
+    padding: 18px;
+  }
+  .lobby-toolbar .tabs {
+    width: 100%;
+  }
+  .character-sheet-masthead {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .sheet-identity > b {
+    height: 34px;
+    width: 34px;
+    font-size: 20px;
+  }
+  .sheet-identity span {
+    display: none;
+  }
+  .sheet-identity > div {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .sheet-identity strong {
+    font-size: 16px;
+  }
+  .character-sheet .modal-body {
+    padding: 8px;
+    gap: 6px;
+  }
+  .sheet-defenses {
+    gap: 9px;
+    font-size: 11px;
+  }
+  .sheet-defenses b {
+    margin-left: 4px;
+  }
+  .vital {
+    padding: 5px;
+  }
+  .vital strong {
+    font-size: 22px;
+  }
+  .sheet-tabs button {
+    padding: 5px 8px;
+  }
+  .battle-action-drawer {
+    bottom: 90px;
+    left: 4px;
+    width: calc(100% - 8px);
+    height: 53%;
+    padding: 8px;
+  }
+  .battle-action-drawer .character-vitals {
+    display: none;
+  }
+  .battle-clocks {
+    width: 35%;
+  }
+  .battle-clocks.upper {
+    top: 24%;
+    left: 2%;
+  }
+  .battle-clocks.lower {
+    bottom: 25%;
+    right: 2%;
+  }
+  .battle-clocks-row {
+    gap: 2px;
+  }
+  .battle-clock .clock-dial {
+    height: 46px;
+  }
+  .battle-clock strong {
+    font-size: 11px;
+  }
+  .battle-clocks > header > span {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+  .battle-clocks > header {
+    gap: 2px;
+  }
+  .battle-clock .clock-quick {
+    top: 20%;
+  }
+  .clock-quick button {
+    width: 23px;
+    height: 26px;
+    min-height: 26px;
+  }
+  .battle-clocks > header button {
+    padding: 0 4px;
+  }
+  .game-table .scene-caption {
+    flex-basis: 58px;
+    min-height: 58px;
+  }
+}
+
+.ability-toolbar {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+.ability-toolbar input {
+  min-width: 0;
+  flex: 1;
+}
+.ability-toolbar select {
+  min-width: 90px;
+  max-width: 38%;
+}
+.expansion-entry-list details {
+  border-bottom: 1px solid #ced2c0;
+  padding: 10px 4px;
+}
+.expansion-entry-list summary {
+  cursor: pointer;
+}
+.expansion-entry-list summary strong {
+  font-size: 14px;
+}
+.expansion-entry-list summary small {
+  display: block;
+  font-size: 11px;
+  color: #6d7e6c;
+  margin-top: 4px;
+}
+.expansion-entry-list p {
+  line-height: 1.8;
+  font-size: 13px;
+}
+.expansion-resources > .row input {
+  flex: 1;
+  min-width: 0;
+}
+.expansion-resources > .row select {
+  max-width: 140px;
+}
+
+.battle-clocks.upper {
+  top: 18%;
+}
+.battle-clock .clock-dial {
+  height: clamp(44px, 13cqh, 105px);
+}
+@container battle (max-width:650px) {
+  .battle-team {
+    width: 60%;
+  }
+  .battle-team.foes {
+    right: 2%;
+    top: 17%;
+    height: 29%;
+  }
+  .battle-team.heroes {
+    left: 2%;
+    bottom: 23%;
+    height: 28%;
+  }
+  .battle-unit {
+    width: 48%;
+  }
+  .battle-clocks {
+    width: 32%;
+  }
+  .battle-clocks.upper {
+    left: 2%;
+    top: 21%;
+  }
+  .battle-clocks.lower {
+    right: 2%;
+    bottom: 25%;
+  }
+  .battle-clocks-row {
+    justify-content: center;
+  }
+  .battle-clocks .clock-dial {
+    height: 74px;
+  }
+  .battle-clocks > header {
+    gap: 2px;
+  }
+  .battle-clocks > header > span {
+    display: none;
+  }
+  .battle-clocks > header > button:first-of-type {
+    margin-left: auto;
+  }
+  .battle-clocks > header > button {
+    min-height: 27px;
+    height: 27px;
+    padding: 0 6px;
+  }
+  .battle-clock .clock-quick {
+    top: 35%;
+  }
+  .battle-action-drawer {
+    bottom: 108px;
+    height: 46%;
+  }
+}

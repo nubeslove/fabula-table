@@ -1,0 +1,31 @@
+{
+  "name": "fabula-table",
+  "version": "0.2.3",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server/main.ts",
+    "dev:ui": "vite --host 127.0.0.1 --port 1540",
+    "check": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "build": "node scripts/build.mjs",
+    "start": "node dist/server.mjs",
+    "package": "node scripts/package.mjs"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.0",
+    "prettier": "3.6.2",
+    "tsx": "4.23.13",
+    "typescript": "5.6.2",
+    "vite": "5.4.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

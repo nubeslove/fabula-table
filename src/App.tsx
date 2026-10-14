@@ -77,6 +77,7 @@ function Table({ initial, leave }: { initial: Session; leave: () => void }) {
     [page, setPage] = useState("舞台"),
     [toolsTab, setToolsTab] = useState("角色行动"),
     [connected, setConnected] = useState(false),
+    [unreadChat, setUnreadChat] = useState(false),
     [error, setError] = useState(""),
     [editing, setEditing] = useState<{
       character: Character;
@@ -153,6 +154,7 @@ function Table({ initial, leave }: { initial: Session; leave: () => void }) {
         page={page}
         open={setPage}
         chat={showLog}
+        unreadChat={unreadChat}
         toggleChat={() => setShowLog(!showLog)}
         leave={() =>
           void api("leave", {})
@@ -246,6 +248,7 @@ function Table({ initial, leave }: { initial: Session; leave: () => void }) {
             session={session}
             act={act}
             extract={record}
+            onUnread={setUnreadChat}
             openJournal={() => setPage("日志")}
             expanded={showLog}
             toggle={() => setShowLog(!showLog)}

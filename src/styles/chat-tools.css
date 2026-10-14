@@ -1,0 +1,100 @@
+.unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-left: 3px;
+  border-radius: 50%;
+  background: #a83b36;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+.game-table .table-header-actions > button {
+  position: relative;
+}
+.table-header-actions .unread-badge {
+  position: absolute;
+  right: -2px;
+  top: -3px;
+}
+.game-table .table-sidebar .log-panel {
+  position: relative;
+}
+.chat-dice-drawer {
+  position: absolute;
+  z-index: 20;
+  bottom: 125px;
+  left: 6px;
+  right: 6px;
+  max-height: calc(100% - 180px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: #fcfbf1;
+  border: 1px solid #afbc9e;
+  border-radius: 9px;
+  padding: 12px;
+  box-shadow: 0 -8px 30px #142d3533;
+}
+.chat-dice-drawer > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.chat-dice-drawer > header button {
+  padding: 3px 9px;
+}
+.dice-controls {
+  display: grid;
+  gap: 10px;
+}
+.dice-mode,
+.dice-attributes {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.dice-mode button {
+  flex: 1;
+}
+.dice-mode button[aria-pressed="true"] {
+  color: #fff;
+  background: #29574f;
+  border-color: #29574f;
+}
+.dice-attributes button {
+  padding: 4px 6px;
+  font-size: 12px;
+}
+.dice-fields {
+  display: flex;
+  gap: 7px;
+  min-width: 0;
+}
+.dice-fields > .field {
+  flex: 1;
+  min-width: 0;
+}
+.dice-controls .field {
+  margin: 0;
+}
+.dice-identity {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+.game-table .chat-compose > div:last-child {
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.game-table .chat-compose > div:last-child small {
+  flex-basis: 100%;
+}
+.game-table .chat-compose > div:last-child button {
+  flex: 1;
+}

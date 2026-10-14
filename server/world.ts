@@ -487,7 +487,6 @@ export function apply(w: World, me: Identity, input: unknown) {
     }
     case "roll": {
       const c = a.actor ? actor(w, me, v.id(a.actor)) : undefined;
-      if (!c) gm(me);
       const sides = v.list(a.sides, (n) => v.int(n, 2, 100), 20);
       v.insist(sides.length > 0, "请选择骰子");
       const modifier = v.int(a.modifier, -999, 999),

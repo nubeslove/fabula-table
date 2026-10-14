@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { sendsOnEnter } from "../lib/chat-input";
 import type { ReactNode } from "react";
 import { SceneMedia } from "./SceneMedia";
 import { UiIcon } from "./TableChrome";
@@ -453,7 +454,7 @@ export function Stage({
                 localStorage.setItem(draftKey, JSON.stringify(next));
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                if (sendsOnEnter(e)) {
                   e.preventDefault();
                   void say();
                 }
@@ -465,7 +466,7 @@ export function Stage({
               disabled={!drafts[speaker]?.trim() || (!gm && !selected)}
               onClick={() => void say()}
             >
-              送上舞台<span>Ctrl ↵</span>
+              送上舞台<span>Enter · Shift 换行</span>
             </button>
           </div>
         </div>

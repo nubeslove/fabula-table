@@ -1,11 +1,7 @@
 import { useState, useEffect } from "react";
 import type { Character, Command, Resource } from "../shared/types";
-import {
-  ATTR_NAMES,
-  currentAttributes,
-  derived,
-  learnedAbilities,
-} from "../shared/rules";
+import { derived, learnedAbilities } from "../shared/rules";
+import { DiceControls } from "./DiceControls";
 import { CharacterVitals } from "./CharacterVitals";
 import { Field, ErrorText } from "./Common";
 export type BattleActionKind = "abilities" | "roll" | "resources";
@@ -24,9 +20,6 @@ export function ActionContent({
 }) {
   const [query, setQuery] = useState(""),
     [category, setCategory] = useState("全部"),
-    [dice, setDice] = useState([8, 8]),
-    [modifier, setModifier] = useState(0),
-    [label, setLabel] = useState("属性检定"),
     [resource, setResource] = useState<Resource>(gm ? "hp" : "mp"),
     [delta, setDelta] = useState(-1),
     [reason, setReason] = useState(""),
@@ -98,61 +91,7 @@ export function ActionContent({
           </div>
         </>
       )}
-      {kind === "roll" && (
-        <>
-          <div className="row wrap">
-            {Object.entries(currentAttributes(c)).map(([key, value]) => (
-              <button key={key} onClick={() => setDice([dice[1], value])}>
-                {ATTR_NAMES[key as keyof typeof ATTR_NAMES]} d{value}
-              </button>
-            ))}
-          </div>
-          <div className="form-grid">
-            {dice.map((n, i) => (
-              <Field key={i} label={`第${i + 1}枚骰子`}>
-                <select
-                  value={n}
-                  onChange={(e) =>
-                    setDice(dice.map((v, j) => (i === j ? +e.target.value : v)))
-                  }
-                >
-                  {[4, 6, 8, 10, 12, 20, 100].map((v) => (
-                    <option value={v} key={v}>
-                      d{v}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            ))}
-            <Field label="修正值">
-              <input
-                type="number"
-                value={modifier}
-                onChange={(e) => setModifier(+e.target.value)}
-              />
-            </Field>
-            <Field label="检定名称">
-              <input
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                maxLength={100}
-              />
-            </Field>
-          </div>
-          <button
-            className="primary"
-            disabled={busy}
-            onClick={() =>
-              void run(
-                { type: "roll", actor: c.id, sides: dice, modifier, label },
-                "掷骰结果已发到掷骰记录",
-              )
-            }
-          >
-            掷骰
-          </button>
-        </>
-      )}
+      {kind === "roll" && <DiceControls character={c} act={act} />}
       {kind === "resources" && (
         <>
           <p>

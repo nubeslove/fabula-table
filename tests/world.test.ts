@@ -26,6 +26,21 @@ function fixture() {
   apply(w, player, { type: "character.save", value: pc, expected: null });
   return w;
 }
+test("普通玩家可以用用户身份掷单骰与双骰，但不能冒用其他角色", () => {
+  const w = fixture();
+  for (const sides of [[20], [6, 12]]) {
+    apply(w, other, { type: "roll", actor: "", sides, modifier: 2, label: "调查" });
+    const log = w.logs.at(-1)!;
+    assert.equal(log.name, other.name);
+    assert.equal(log.actor, "");
+    assert.equal(log.channel, "dice");
+    assert.deepEqual(log.roll?.sides, sides);
+    assert.equal(log.roll?.values.length, sides.length);
+    assert.ok(log.roll!.values.every((value, i) => value >= 1 && value <= sides[i]));
+  }
+  assert.throws(() => apply(w, other, { type: "roll", actor: "pc", sides: [8], modifier: 0, label: "" }), /不能操作/);
+  assert.throws(() => apply(w, other, { type: "roll", actor: "", sides: [], modifier: 0, label: "" }), /请选择骰子/);
+});
 test("场景分类保存且只对 GM 可见；旧场景无需迁移", () => {
   const w = fixture(),
     s = newScene("chapter_one");

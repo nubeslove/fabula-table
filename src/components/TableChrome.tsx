@@ -45,6 +45,7 @@ export function TableHeader({
   page,
   open,
   chat,
+  unreadChat,
   toggleChat,
   leave,
 }: {
@@ -54,6 +55,7 @@ export function TableHeader({
   page: string;
   open: (page: string) => void;
   chat: boolean;
+  unreadChat: boolean;
   toggleChat: () => void;
   leave: () => void;
 }) {
@@ -120,6 +122,7 @@ export function TableHeader({
             title={chat ? "收起聊天栏" : "打开聊天栏"}
           >
             <UiIcon path="M21 11a8 8 0 0 1-8 8H8l-6 3 2-6a8 8 0 0 1-2-5 8 8 0 0 1 8-8h3a8 8 0 0 1 8 8z M7 9h9 M7 13h6" />
+            {unreadChat && <span className="unread-badge" aria-label="有新消息">!</span>}
           </button>
           <button onClick={leave} aria-label="返回大厅" title="返回大厅">
             <UiIcon path="M9 3H4v18h5 M14 8l5 4-5 4 M8 12h11" />

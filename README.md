@@ -24,6 +24,8 @@
 
 - [0.2.0 大厅、扩展与游玩工作区](docs/design/大厅扩展与游玩工作区.md)
 - [0.2.4 全新安装、残留任务接管、启停与在线更新](docs/Windows全新安装与在线更新-2026-10-13.md)
+- [0.2.5 聊天快捷键、未读提醒与单／双骰](docs/design/聊天快捷操作-2026-10-14.md)
+- [深蓝金色 JRPG 独立交互 Demo](demos/jrpg/README.md)：角色卡、装备背包、法术详情与三种场景；[设计与来源](docs/design/JRPG界面与角色卡-demo-2026-10-14.md)。这是先行审阅原型，未替换正式游玩界面。
 - [Windows 保留世界升级说明](deploy/升级说明.md)
 - [0.2.2 Windows 桌面安装路径权限修复](docs/Windows升级启动检查修正-2026-10-13.md)
 - Windows 后台任务返回 1 且无日志：使用 `release/fu-startup-diagnostic-v1.zip`，详见上述修正记录的后续诊断段落。

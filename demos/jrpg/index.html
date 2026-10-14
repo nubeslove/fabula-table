@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>最终物语 · 星落之庭 / UI Demo</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <svg class="svg-library" aria-hidden="true">
+      <defs>
+        <symbol id="i-star" viewBox="0 0 24 24">
+          <path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" />
+        </symbol>
+        <symbol id="i-sword" viewBox="0 0 24 24">
+          <path d="m8 16 12-13 1 5-10 11M5 14l6 6M3 21l4-4" />
+        </symbol>
+        <symbol id="i-shield" viewBox="0 0 24 24">
+          <path d="m12 2 9 4-1 9-8 7-8-7-1-9Z M12 5v13M6 10h12" />
+        </symbol>
+        <symbol id="i-book" viewBox="0 0 24 24">
+          <path
+            d="M12 5Q7 1 2 4v16q5-3 10 1 5-4 10-1V4q-5-3-10 1v16M5 7l4 1m6 0 4-1"
+          />
+        </symbol>
+        <symbol id="i-pack" viewBox="0 0 24 24">
+          <path d="M5 7h14l2 14H3ZM8 7V3h8v4M4 10l8 4 8-4m-8 4v4" />
+        </symbol>
+        <symbol id="i-dice" viewBox="0 0 24 24">
+          <path d="m12 2 10 7-4 12H6L2 9Zm0 0L6 21 22 9H2l16 12Z" />
+        </symbol>
+        <symbol id="i-chat" viewBox="0 0 24 24">
+          <path d="M3 3h18v14H9l-6 5Zm4 5h10M7 12h7" />
+        </symbol>
+        <symbol id="i-grid" viewBox="0 0 24 24">
+          <path d="M3 3h18v18H3ZM3 9h18M3 15h18M9 3v18m6-18v18" />
+        </symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24">
+          <path d="M21 14A10 10 0 0 1 10 3 10 10 0 1 0 21 14Z" />
+        </symbol>
+        <symbol id="i-armor" viewBox="0 0 24 24">
+          <path d="m8 3 4 3 4-3 6 5-4 4-1 9H7l-1-9-4-4Zm4 3v15M7 15h10" />
+        </symbol>
+        <symbol id="i-ring" viewBox="0 0 24 24">
+          <path d="m12 2 4 4-4 4-4-4Zm-5 8a7 7 0 1 0 10 0" />
+        </symbol>
+      </defs>
+    </svg>
+    <div class="table" id="table">
+      <header class="topbar">
+        <div class="brand">
+          <svg><use href="#i-star" /></svg>
+          <div>最终物语<small>FABULA ULTIMA</small></div>
+        </div>
+        <div class="world-name">星落之庭<span>第四章 · 钟塔以北</span></div>
+        <nav class="mode-nav" aria-label="场景模式">
+          <button data-mode="story" class="active">演出</button
+          ><button data-mode="explore">探索</button
+          ><button data-mode="conflict">冲突</button>
+        </nav>
+        <div class="top-actions">
+          <span class="demo-badge">交互 DEMO</span
+          ><button id="journal-toggle" aria-label="冒险手记" title="冒险手记">
+            <svg><use href="#i-book" /></svg><span>手记</span></button
+          ><button id="chat-toggle" aria-label="收起聊天">
+            <svg><use href="#i-chat" /></svg
+            ><i id="top-unread" class="unread" hidden>!</i></button
+          ><span class="gm-badge">GM</span>
+        </div>
+      </header>
+      <section class="clock-strip" aria-label="优先显示的命刻">
+        <div class="strip-label">
+          <svg><use href="#i-star" /></svg
+          ><span>命刻<small>此刻的故事</small></span>
+        </div>
+        <div id="global-clocks"></div>
+        <button id="clock-more" class="quiet">全部命刻 <span>⌄</span></button>
+      </section>
+      <main class="stage" id="stage" data-mode="story">
+        <img
+          class="landscape"
+          src="assets/observatory.svg"
+          alt="月夜钟塔与湖面的场景示意"
+        />
+        <div class="scene-vignette"></div>
+        <div class="scene-heading">
+          <div>
+            <span id="scene-tag">SCENE 04 · 演出</span>
+            <h1 id="scene-title">星落钟塔</h1>
+            <p id="scene-caption">夜色将至，某个约定仍在等待。</p>
+          </div>
+          <span class="art-note">演示场景与角色素材</span>
+        </div>
+        <section id="story-view" class="mode-view">
+          <div class="cast" id="cast"></div>
+          <div class="dialogue">
+            <div class="dialogue-name" id="speaker-name">莉娜 · 银岚</div>
+            <p id="dialogue-text">
+              钟声停了。可我总觉得……那道门的另一边，还有人在等我们。
+            </p>
+            <button id="next-line" aria-label="下一句台词">
+              继续 <span>◆</span>
+            </button>
+          </div>
+          <div class="cast-note">点击角色切换演出 · 说话者高亮</div>
+        </section>
+        <section id="explore-view" class="mode-view" hidden>
+          <div class="map-frame">
+            <div class="grid-map" id="grid-map" aria-label="方格探索地图"></div>
+          </div>
+          <div class="explore-control">
+            <span><b id="move-turn">第 1 轮</b> · 莉娜行动</span
+            ><span
+              >剩余 <b id="moves">4</b> /
+              <span id="move-limit-display">4</span> 格</span
+            ><label
+              >每轮
+              <select id="move-limit" aria-label="场景每轮移动格数">
+                <option>2</option>
+                <option selected>4</option>
+                <option>6</option>
+              </select>
+              格</label
+            ><button id="end-turn">结束回合 →</button>
+          </div>
+          <span class="map-note">点击亮起的格子移动 · 不计算距离单位</span>
+        </section>
+        <section id="conflict-view" class="mode-view" hidden>
+          <div class="conflict-status">
+            <span>CONFLICT</span><b id="round-label">第 1 轮</b
+            ><small>我方行动中</small>
+          </div>
+          <div class="battle-clocks upper" id="upper-clocks"></div>
+          <div class="battle-line enemies" id="enemies"></div>
+          <div class="battle-line allies" id="allies"></div>
+          <div class="battle-clocks lower" id="lower-clocks"></div>
+          <button class="round-next" id="round-next">下一轮 →</button>
+        </section>
+        <section id="sheet" class="sheet" aria-label="角色与行动抽屉" hidden>
+          <header class="sheet-head">
+            <div class="sheet-person">
+              <img src="assets/silver-wayfarer.webp" alt="莉娜" /><span
+                ><b>莉娜 · 银岚</b><small>Lv.20 · 展示角色</small></span
+              >
+            </div>
+            <div class="sheet-vitals">
+              <span class="hp"
+                ><small>HP</small><b>46<em>/ 65</em></b
+                ><i style="--p: 71%"></i></span
+              ><span class="mp"
+                ><small>MP</small><b>38<em>/ 70</em></b
+                ><i style="--p: 54%"></i></span
+              ><span
+                ><small>库存 IP</small><b>4<em>/ 6</em></b></span
+              ><span><small>物语点</small><b>3</b></span
+              ><span class="zenit"
+                ><small>泽尼特</small><b>1,280 <em>Z</em></b></span
+              >
+            </div>
+            <button id="sheet-close" class="close" aria-label="收起角色抽屉">
+              ×
+            </button>
+          </header>
+          <nav class="sheet-tabs" aria-label="角色卡分区">
+            <button data-sheet="overview">人物概览</button
+            ><button data-sheet="spells" class="active">
+              能力与法术 <small>06</small></button
+            ><button data-sheet="gear">装备与背包 <small>08</small></button
+            ><span>手动裁定 · 条目随取随看</span>
+          </nav>
+          <div id="sheet-content" class="sheet-content"></div>
+        </section>
+      </main>
+      <aside class="chat" id="chat" aria-label="聊天与记录">
+        <header>
+          <span>旅途中的声音<small>CHAT & JOURNAL</small></span
+          ><span class="live-dot">4 人在线</span>
+        </header>
+        <nav class="channels" id="channels" aria-label="聊天频道"></nav>
+        <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
+        <section
+          class="dice-drawer"
+          id="dice-drawer"
+          hidden
+          aria-label="掷骰工具"
+        >
+          <header>
+            <b>掷骰</b><button id="dice-close" aria-label="关闭掷骰">×</button>
+          </header>
+          <div class="segmented">
+            <button data-dice-count="1">单骰</button
+            ><button data-dice-count="2" class="active">双骰</button>
+          </div>
+          <div class="dice-fields">
+            <label
+              >骰子一<select id="die-one">
+                <option>4</option>
+                <option>6</option>
+                <option selected>8</option>
+                <option>10</option>
+                <option>12</option>
+                <option>20</option>
+                <option>100</option>
+              </select></label
+            ><label id="die-two-label"
+              >骰子二<select id="die-two">
+                <option>4</option>
+                <option>6</option>
+                <option>8</option>
+                <option selected>10</option>
+                <option>12</option>
+                <option>20</option>
+                <option>100</option>
+              </select></label
+            ><label
+              >修正<input
+                id="roll-mod"
+                type="number"
+                value="0"
+                min="-99"
+                max="99"
+            /></label>
+          </div>
+          <button id="roll" class="primary">掷出骰子</button
+          ><output id="roll-output"></output>
+        </section>
+        <form class="chat-compose" id="chat-form">
+          <div class="compose-identity">
+            <svg><use href="#i-chat" /></svg
+            ><span id="chat-identity">莉娜 · 场内发言</span
+            ><button
+              type="button"
+              id="simulate-message"
+              title="模拟收到其他玩家消息"
+            >
+              模拟新消息
+            </button>
+          </div>
+          <textarea
+            id="chat-text"
+            aria-label="聊天内容"
+            placeholder="写下此刻想说的话……"
+            rows="2"
+          ></textarea>
+          <div>
+            <button id="dice-toggle" type="button">
+              <svg><use href="#i-dice" /></svg>掷骰</button
+            ><small>Enter 发送 · Shift 换行</small
+            ><button class="primary" type="submit">发送</button>
+          </div>
+        </form>
+      </aside>
+      <footer class="party-dock">
+        <div class="party-label">你的旅途<small>PARTY</small></div>
+        <button class="party-card selected" data-person="lina">
+          <img src="assets/silver-wayfarer.webp" alt="" /><span
+            ><b>莉娜 <small>银岚</small></b
+            ><span class="mini-vitals"
+              >HP <strong>46</strong>　MP <strong>38</strong></span
+            ><small class="gold">泽尼特 1,280 Z</small></span
+          ><i>↗</i></button
+        ><button class="party-card" data-person="rein" aria-label="查看雷恩">
+          <span class="avatar token-rein">雷</span
+          ><span
+            ><b>雷恩 <small>守卫</small></b
+            ><span class="mini-vitals"
+              >HP <strong>72</strong>　MP <strong>30</strong></span
+            ><small class="gold">泽尼特 860 Z</small></span
+          ></button
+        ><button class="party-card" data-person="io" aria-label="查看伊芙">
+          <span class="avatar token-io">伊</span
+          ><span
+            ><b>伊芙 <small>游侠</small></b
+            ><span class="mini-vitals"
+              >HP <strong>50</strong>　MP <strong>45</strong></span
+            ><small class="gold">泽尼特 420 Z</small></span
+          >
+        </button>
+        <div class="dock-actions">
+          <button id="open-sheet">
+            <svg><use href="#i-book" /></svg>角色卡</button
+          ><button id="open-actions" class="primary">
+            <svg><use href="#i-sword" /></svg>行动 <span>↑</span>
+          </button>
+        </div>
+      </footer>
+    </div>
+    <aside id="utility" class="utility" hidden>
+      <header>
+        <h2 id="utility-title">冒险手记</h2>
+        <button id="utility-close" aria-label="收起侧面板">×</button>
+      </header>
+      <div id="utility-body"></div>
+    </aside>
+    <div class="toast" id="toast" role="status" hidden></div>
+    <script src="demo.js"></script>
+  </body>
+</html>

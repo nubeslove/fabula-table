@@ -3,6 +3,7 @@ import type { Asset, Session, Command } from "../shared/types";
 import { api, apiUrl, bytes, copy } from "../lib/api";
 import { getAsset, upload } from "../lib/media";
 import { ErrorText, Modal } from "./Common";
+import { BaseArtBrowser } from "./BaseArtBrowser";
 function shareUrl(params: Record<string, string>) {
   const url = new URL(document.baseURI);
   url.search = "";
@@ -84,6 +85,12 @@ export function Resources({
           </button>
         )}
         <span>{bytes(w.assets.reduce((n, a) => n + a.size, 0))}</span>
+        <button
+          className={tab === "base" ? "selected" : ""}
+          onClick={() => setTab("base")}
+        >
+          基础资源库
+        </button>
       </div>
       <ErrorText text={error} />
       {(info || busy) && (
@@ -96,7 +103,9 @@ export function Resources({
           )}
         </div>
       )}
-      {tab === "files" ? (
+      {tab === "base" ? (
+        <BaseArtBrowser />
+      ) : tab === "files" ? (
         <>
           <div className="workspace-toolbar">
             <input

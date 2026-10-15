@@ -4,6 +4,7 @@ import type { Character, Command, Session } from "../shared/types";
 import { BattleClocks } from "./BattleClocks";
 import { derived } from "../shared/rules";
 import { BattleAction, type BattleActionKind } from "./BattleAction";
+import { formation } from "../shared/formation";
 
 export function BattleStage({
   session: { world: w, me },
@@ -22,9 +23,13 @@ export function BattleStage({
 }) {
   const frame = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(1000);
+  const [height, setHeight] = useState(600);
   useEffect(() => {
     if (!frame.current) return;
-    const observer = new ResizeObserver(([e]) => setWidth(e.contentRect.width));
+    const observer = new ResizeObserver(([e]) => {
+      setWidth(e.contentRect.width);
+      setHeight(e.contentRect.height);
+    });
     observer.observe(frame.current);
     return () => observer.disconnect();
   }, []);
@@ -53,6 +58,20 @@ export function BattleStage({
     if (b.current) select(b.current);
   }, [b.current]);
   const canAct = selected && (gm || selected.owner === me.id);
+  const enemyRows = formation(
+    width,
+    height,
+    roster.filter((c) => c.side === "foes").length,
+    true,
+  ).rows;
+  const allyRows = formation(
+    width,
+    height,
+    roster.filter((c) => c.side === "heroes").length,
+    false,
+  ).rows;
+  const enemyShare =
+    enemyRows === allyRows ? 0.5 : enemyRows > allyRows ? 0.63 : 0.37;
   async function run(command: Command) {
     setBusy(true);
     try {
@@ -62,7 +81,12 @@ export function BattleStage({
     }
   }
   return (
-    <div ref={frame} className="battle-scene" aria-label="二维冲突场景">
+    <div
+      ref={frame}
+      className="battle-scene revised-battle"
+      aria-label="二维冲突场景"
+      style={{ "--enemy-share": enemyShare } as CSSProperties}
+    >
       <div className="battle-atmosphere" aria-hidden="true" />
       <div className="battle-round">
         <span>CONFLICT</span>
@@ -74,7 +98,8 @@ export function BattleStage({
         </small>
       </div>
       <BattleTeam
-        perPage={width < 650 ? 2 : 4}
+        width={width}
+        height={height}
         side="foes"
         members={roster.filter((c) => c.side === "foes")}
         urls={urls}
@@ -88,7 +113,8 @@ export function BattleStage({
         <span>✦</span>
       </div>
       <BattleTeam
-        perPage={width < 650 ? 2 : 4}
+        width={width}
+        height={height}
         side="heroes"
         members={roster.filter((c) => c.side === "heroes")}
         urls={urls}
@@ -100,7 +126,14 @@ export function BattleStage({
       />
       {(["upper", "lower"] as const).map((placement) => (
         <BattleClocks
-          perPage={width < 480 ? 1 : width < 650 ? 2 : 3}
+          collapsed={
+            !!action ||
+            width < 850 ||
+            height < 450 ||
+            roster.filter(
+              (c) => c.side === (placement === "upper" ? "foes" : "heroes"),
+            ).length > 4
+          }
           key={placement}
           clocks={w.clocks.filter((c) => c.scene === scene?.id)}
           placement={placement}
@@ -110,6 +143,16 @@ export function BattleStage({
         />
       ))}
       <div className="battle-command-bar">
+        {gm && b.active && (
+          <button
+            className="next-round primary"
+            disabled={busy || !!b.current}
+            title={b.current ? "请先结束当前行动" : "由 GM 开始下一轮"}
+            onClick={() => void run({ type: "battle.nextRound" })}
+          >
+            下一轮 →
+          </button>
+        )}
         <div className="battle-selected">
           <small>
             {selected
@@ -197,7 +240,8 @@ export function BattleStage({
 
 function BattleTeam({
   side,
-  perPage,
+  width,
+  height,
   members,
   urls,
   selected,
@@ -207,7 +251,8 @@ function BattleTeam({
   gm,
 }: {
   side: "heroes" | "foes";
-  perPage: number;
+  width: number;
+  height: number;
   members: Character[];
   urls: Record<string, string>;
   selected?: string;
@@ -216,6 +261,8 @@ function BattleTeam({
   acted: string[];
   gm: boolean;
 }) {
+  const layout = formation(width, height, members.length, side === "foes");
+  const perPage = layout.capacity;
   const [page, setPage] = useState(0),
     pages = Math.ceil(members.length / perPage),
     shownPage = Math.min(page, Math.max(0, pages - 1));
@@ -229,7 +276,7 @@ function BattleTeam({
   );
   return (
     <section
-      className={`battle-team ${side}`}
+      className={`battle-team ${side} ${layout.expanded ? "expanded" : ""}`}
       aria-label={side === "heroes" ? "我方阵容" : "对方阵容"}
     >
       <header>
@@ -257,7 +304,13 @@ function BattleTeam({
           </div>
         )}
       </header>
-      <div className="battle-formation">
+      <div
+        className="battle-formation"
+        style={{
+          gridTemplateColumns: `repeat(${layout.columns}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${layout.rows}, minmax(0, 1fr))`,
+        }}
+      >
         {shown.map((c, i) => (
           <button
             key={c.id}
@@ -301,8 +354,12 @@ function BattleTeam({
               </span>
             )}
             {!!c.statuses.length && (
-              <span className="battle-statuses" title={c.statuses.join(" · ")}>
-                {c.statuses.join(" · ")}
+              <span
+                className="battle-statuses"
+                title={c.statuses.join(" · ")}
+                aria-label={`状态：${c.statuses.join(" · ")}`}
+              >
+                状态 {c.statuses.length}
               </span>
             )}
           </button>

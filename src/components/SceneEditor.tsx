@@ -3,6 +3,8 @@ import type { Scene, World } from "../shared/types";
 import { Modal, Field } from "./Common";
 import { uid } from "../lib/api";
 import { ExplorationSettings } from "./ExplorationSettings";
+import { BaseArtBrowser } from "./BaseArtBrowser";
+import { baseArtById } from "../shared/base-library";
 export function SceneEditor({
   initial,
   world,
@@ -17,6 +19,7 @@ export function SceneEditor({
   error?: string;
 }) {
   const [s, set] = useState(() => structuredClone(initial));
+  const [library, setLibrary] = useState(false);
   const edit = <K extends keyof Scene>(k: K, value: Scene[K]) =>
     set({ ...s, [k]: value });
   return (
@@ -64,6 +67,11 @@ export function SceneEditor({
             onChange={(e) => edit("background", e.target.value)}
           >
             <option value="">默认舞台</option>
+            {baseArtById.has(s.background) && (
+              <option value={s.background}>
+                {baseArtById.get(s.background)!.name} · 基础资源
+              </option>
+            )}
             {world.assets
               .filter(
                 (a) =>
@@ -75,6 +83,9 @@ export function SceneEditor({
                 </option>
               ))}
           </select>
+          <button type="button" onClick={() => setLibrary(true)}>
+            从基础场景库选择
+          </button>
         </Field>
         <Field label="背景音乐">
           <select
@@ -92,6 +103,22 @@ export function SceneEditor({
           </select>
         </Field>
       </div>
+      {library && (
+        <Modal
+          title="选择基础场景"
+          onClose={() => setLibrary(false)}
+          wide
+          className="library-dialog"
+        >
+          <BaseArtBrowser
+            kind="场景"
+            choose={(a) => {
+              edit("background", a.id);
+              setLibrary(false);
+            }}
+          />
+        </Modal>
+      )}
       {s.mode === "map" && (
         <ExplorationSettings scene={s} world={world} change={set} />
       )}

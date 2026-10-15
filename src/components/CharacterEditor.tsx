@@ -1,3 +1,7 @@
+import { ClassSkills } from "./ClassSkills";
+import { AbilityEditor } from "./AbilityEditor";
+import { InventoryPanel } from "./InventoryPanel";
+import { CharacterAbilities } from "./CharacterAbilities";
 import { ExpansionResources } from "./ExpansionResources";
 import { expansionName } from "../shared/expansions";
 import { CharacterVitals } from "./CharacterVitals";
@@ -15,6 +19,8 @@ import {
 } from "../shared/rules";
 import { Field, Modal } from "./Common";
 import { uid } from "../lib/api";
+import { BaseArtBrowser } from "./BaseArtBrowser";
+import { baseArtById } from "../shared/base-library";
 export function CharacterEditor({
   initial,
   isNew,
@@ -31,6 +37,7 @@ export function CharacterEditor({
   error?: string;
 }) {
   const [c, set] = useState(() => structuredClone(initial)),
+    [artTarget, setArtTarget] = useState<((id: string) => void) | null>(null),
     [tab, setTab] = useState("人物"),
     [classId, setClassId] = useState(initial.classes[0]?.id ?? ""),
     [saving, setSaving] = useState(false),
@@ -56,16 +63,24 @@ export function CharacterEditor({
     }
   }
   const assetSelect = (value: string, change: (v: string) => void) => (
-    <select value={value} onChange={(e) => change(e.target.value)}>
-      <option value="">不用图片</option>
-      {session.world.assets
-        .filter((a) => a.mime.startsWith("image/"))
-        .map((a) => (
-          <option key={a.id} value={a.id}>
-            {a.name}
+    <div className="row">
+      <select value={value} onChange={(e) => change(e.target.value)}>
+        <option value="">不用图片</option>
+        {baseArtById.has(value) && (
+          <option value={value}>
+            {baseArtById.get(value)!.name} · 基础资源
           </option>
-        ))}
-    </select>
+        )}
+        {session.world.assets
+          .filter((a) => a.mime.startsWith("image/"))
+          .map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
+          ))}
+      </select>
+      <button onClick={() => setArtTarget(() => change)}>基础立绘库</button>
+    </div>
   );
   return (
     <Modal
@@ -75,6 +90,22 @@ export function CharacterEditor({
       wide
       className="character-sheet"
     >
+      {artTarget && (
+        <Modal
+          title="选择基础立绘"
+          onClose={() => setArtTarget(null)}
+          wide
+          className="library-dialog"
+        >
+          <BaseArtBrowser
+            kind="怪物"
+            choose={(a) => {
+              artTarget(a.id);
+              setArtTarget(null);
+            }}
+          />
+        </Modal>
+      )}
       <div className="character-sheet-masthead">
         <div className="sheet-identity">
           <b style={{ background: c.color }}>{c.name.slice(0, 1)}</b>
@@ -111,6 +142,7 @@ export function CharacterEditor({
           "属性",
           "职业",
           "装备",
+          "能力与法术",
           "羁绊与状态",
           "扩展资源",
           "自定义",
@@ -125,7 +157,10 @@ export function CharacterEditor({
           </button>
         ))}
       </div>
-      <div className="sheet-page" key={tab}>
+      <div
+        className={`sheet-page ${["装备", "能力与法术"].includes(tab) ? "structured-sheet-page" : ""}`}
+        key={tab}
+      >
         {tab === "人物" && (
           <>
             <div className="form-grid">
@@ -452,39 +487,13 @@ export function CharacterEditor({
                       </select>
                     </Field>
                   )}
-                  {definition?.skills.map((skill) => (
-                    <details className="skill-choice" key={skill.id}>
-                      <summary>
-                        <span>{skill.name}</span>
-                        <label onClick={(e) => e.stopPropagation()}>
-                          SL{" "}
-                          <input
-                            aria-label={skill.name + "等级"}
-                            type="number"
-                            min={0}
-                            max={skill.max}
-                            value={choice.skills[skill.id] ?? 0}
-                            onChange={(e) =>
-                              change({
-                                ...choice,
-                                skills: {
-                                  ...choice.skills,
-                                  [skill.id]: +e.target.value,
-                                },
-                              })
-                            }
-                          />
-                          <small> / {skill.max}</small>
-                        </label>
-                      </summary>
-                      <p className="preserve">{skill.description}</p>
-                      <small>
-                        {definition?.expansion
-                          ? expansionName(definition.expansion)
-                          : `核心书 ${skill.page} 页`}
-                      </small>
-                    </details>
-                  ))}
+                  {definition && (
+                    <ClassSkills
+                      definition={definition}
+                      choice={choice}
+                      change={change}
+                    />
+                  )}
                   {!definition && (
                     <input
                       aria-label="自定义职业名称"
@@ -538,61 +547,9 @@ export function CharacterEditor({
             </div>
           </>
         )}
-        {tab === "装备" && (
-          <>
-            <p>
-              起始装备预算 <strong>500 z</strong> · 已选{" "}
-              <strong>{d.cost} z</strong> · 剩余 {500 - d.cost} z
-            </p>
-            <p className="muted">
-              创建后另行掷 2d6 ×
-              10，并把结果加入泽尼特。升级后的装备与金钱由团内确认。
-            </p>
-            {(["weapon", "armor", "shield"] as const).map((kind) => (
-              <section key={kind}>
-                <h3>
-                  {{ weapon: "武器", armor: "防具", shield: "盾牌" }[kind]}
-                </h3>
-                <div className="equipment-grid">
-                  {EQUIPMENT.filter((e) => e.kind === kind).map((e) => (
-                    <label
-                      className={
-                        "equipment " +
-                        (c.equipment.includes(e.id) ? "chosen" : "")
-                      }
-                      key={e.id}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={c.equipment.includes(e.id)}
-                        onChange={(ev) =>
-                          edit(
-                            "equipment",
-                            ev.target.checked
-                              ? [...c.equipment, e.id]
-                              : c.equipment.filter((id) => id !== e.id),
-                          )
-                        }
-                      />
-                      <span>
-                        <strong>{e.name}</strong>
-                        <small>
-                          {e.cost} z{e.hands ? " · " + e.hands + " 手" : ""}
-                          {e.training ? " · 职业装备" : ""}
-                        </small>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </section>
-            ))}
-            <Field label="其他装备与道具">
-              <textarea
-                value={c.gearNotes}
-                onChange={(e) => edit("gearNotes", e.target.value)}
-              />
-            </Field>
-          </>
+        {tab === "装备" && <InventoryPanel character={c} change={set} />}
+        {tab === "能力与法术" && (
+          <CharacterAbilities character={c} change={set} />
         )}
         {tab === "扩展资源" && (
           <ExpansionResources
@@ -661,55 +618,10 @@ export function CharacterEditor({
               ])}
             </div>
             <h3>自定义能力／法术／阿尔卡纳</h3>
-            {c.abilities.map((a, i) => {
-              const change = (value: typeof a) =>
-                edit(
-                  "abilities",
-                  c.abilities.map((x, j) => (i === j ? value : x)),
-                );
-              return (
-                <div className="class-block" key={a.id}>
-                  <div className="row">
-                    <input
-                      aria-label="能力名称"
-                      value={a.name}
-                      onChange={(e) => change({ ...a, name: e.target.value })}
-                    />
-                    <input
-                      aria-label="能力消耗"
-                      placeholder="消耗，例如 10 MP"
-                      value={a.cost}
-                      onChange={(e) => change({ ...a, cost: e.target.value })}
-                    />
-                    <button
-                      onClick={() =>
-                        edit(
-                          "abilities",
-                          c.abilities.filter((_, j) => j !== i),
-                        )
-                      }
-                    >
-                      移除
-                    </button>
-                  </div>
-                  <textarea
-                    aria-label="能力说明"
-                    value={a.text}
-                    onChange={(e) => change({ ...a, text: e.target.value })}
-                  />
-                </div>
-              );
-            })}
-            <button
-              onClick={() =>
-                edit("abilities", [
-                  ...c.abilities,
-                  { id: uid(), name: "新的能力", cost: "由 GM 确认", text: "" },
-                ])
-              }
-            >
-              ＋ 添加能力
-            </button>
+            <AbilityEditor
+              entries={c.abilities}
+              change={(a) => edit("abilities", a)}
+            />
           </>
         )}
         {tab === "立绘" && (

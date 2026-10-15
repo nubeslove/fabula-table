@@ -3,8 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>最终物语 · 星落之庭 / UI Demo</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>最终物语 · 浅绿物语桌 / Demo 2</title>
+    <link rel="stylesheet" href="style.css?v=2" />
+    <link rel="stylesheet" href="clocks.css?v=2" />
+    <link rel="stylesheet" href="battle.css?v=2" />
   </head>
   <body>
     <svg class="svg-library" aria-hidden="true">
@@ -59,7 +61,8 @@
           ><button data-mode="conflict">冲突</button>
         </nav>
         <div class="top-actions">
-          <span class="demo-badge">交互 DEMO</span
+          <button class="demo-badge" id="demo-options" title="人数与新消息演示">
+            DEMO 2 · 演示选项</button
           ><button id="journal-toggle" aria-label="冒险手记" title="冒险手记">
             <svg><use href="#i-book" /></svg><span>手记</span></button
           ><button id="chat-toggle" aria-label="收起聊天">
@@ -80,7 +83,7 @@
         <img
           class="landscape"
           src="assets/observatory.svg"
-          alt="月夜钟塔与湖面的场景示意"
+          alt="晨雾钟塔与湖面的场景示意"
         />
         <div class="scene-vignette"></div>
         <div class="scene-heading">
@@ -126,15 +129,111 @@
           <span class="map-note">点击亮起的格子移动 · 不计算距离单位</span>
         </section>
         <section id="conflict-view" class="mode-view" hidden>
-          <div class="conflict-status">
-            <span>CONFLICT</span><b id="round-label">第 1 轮</b
-            ><small>我方行动中</small>
+          <header class="battle-toolbar">
+            <div class="conflict-status">
+              <small>冲突 · 我方行动中</small><b id="round-label">第 1 轮</b>
+            </div>
+            <button class="round-next primary" id="round-next">
+              <span>下一轮</span><span aria-hidden="true">→</span>
+            </button>
+            <div class="battle-counts">
+              <label
+                >我方<select id="party-count" aria-label="我方人数">
+                  <option>3</option>
+                  <option selected>4</option>
+                  <option>6</option>
+                  <option>8</option>
+                  <option>10</option>
+                  <option>12</option>
+                </select></label
+              >
+              <span aria-hidden="true">／</span>
+              <label
+                >对方<select id="enemy-count" aria-label="对方人数">
+                  <option>3</option>
+                  <option selected>4</option>
+                  <option>6</option>
+                  <option>8</option>
+                  <option>12</option>
+                  <option>16</option>
+                </select></label
+              >
+            </div>
+          </header>
+          <div class="battlefield" id="battlefield">
+            <section
+              class="team-zone enemies"
+              id="enemy-zone"
+              aria-label="对方阵型"
+            >
+              <header>
+                <b>对方</b><span id="enemy-count-label"></span>
+                <div class="team-pager" id="enemy-pager"></div>
+              </header>
+              <div class="battle-line" id="enemies"></div>
+            </section>
+            <section
+              class="team-zone allies"
+              id="ally-zone"
+              aria-label="我方阵型"
+            >
+              <header>
+                <b>我方</b><span id="ally-count-label"></span>
+                <div class="team-pager" id="ally-pager"></div>
+              </header>
+              <div class="battle-line" id="allies"></div>
+            </section>
+            <div class="clock-pod upper" id="upper-pod">
+              <div id="upper-clocks"></div>
+            </div>
+            <div class="clock-pod lower" id="lower-pod">
+              <div id="lower-clocks"></div>
+            </div>
           </div>
-          <div class="battle-clocks upper" id="upper-clocks"></div>
-          <div class="battle-line enemies" id="enemies"></div>
-          <div class="battle-line allies" id="allies"></div>
-          <div class="battle-clocks lower" id="lower-clocks"></div>
-          <button class="round-next" id="round-next">下一轮 →</button>
+          <button
+            class="clock-tab left"
+            id="upper-clock-toggle"
+            aria-expanded="false"
+            aria-controls="upper-clock-drawer"
+          >
+            <span>上半场命刻</span><b>1</b><span aria-hidden="true">›</span>
+          </button>
+          <button
+            class="clock-tab right"
+            id="lower-clock-toggle"
+            aria-expanded="false"
+            aria-controls="lower-clock-drawer"
+          >
+            <span>下半场命刻</span><b>1</b><span aria-hidden="true">‹</span>
+          </button>
+          <aside
+            class="scene-clock-drawer left"
+            id="upper-clock-drawer"
+            aria-label="上半场命刻抽屉"
+            inert
+          >
+            <header>
+              <h2>上半场命刻</h2>
+              <button data-close-clocks="upper" aria-label="收起上半场命刻">
+                ×
+              </button>
+            </header>
+            <div id="upper-clock-list" class="scene-clock-list"></div>
+          </aside>
+          <aside
+            class="scene-clock-drawer right"
+            id="lower-clock-drawer"
+            aria-label="下半场命刻抽屉"
+            inert
+          >
+            <header>
+              <h2>下半场命刻</h2>
+              <button data-close-clocks="lower" aria-label="收起下半场命刻">
+                ×
+              </button>
+            </header>
+            <div id="lower-clock-list" class="scene-clock-list"></div>
+          </aside>
         </section>
         <section id="sheet" class="sheet" aria-label="角色与行动抽屉" hidden>
           <header class="sheet-head">
@@ -228,12 +327,8 @@
           <div class="compose-identity">
             <svg><use href="#i-chat" /></svg
             ><span id="chat-identity">莉娜 · 场内发言</span
-            ><button
-              type="button"
-              id="simulate-message"
-              title="模拟收到其他玩家消息"
-            >
-              模拟新消息
+            ><button id="dice-toggle" type="button" aria-expanded="false">
+              <svg><use href="#i-dice" /></svg>掷骰
             </button>
           </div>
           <textarea
@@ -242,11 +337,11 @@
             placeholder="写下此刻想说的话……"
             rows="2"
           ></textarea>
-          <div>
-            <button id="dice-toggle" type="button">
-              <svg><use href="#i-dice" /></svg>掷骰</button
-            ><small>Enter 发送 · Shift 换行</small
-            ><button class="primary" type="submit">发送</button>
+          <div class="compose-footer">
+            <small>Enter 发送 · Shift+Enter 换行</small>
+            <button class="primary send-button" type="submit">
+              发送 <span aria-hidden="true">↵</span>
+            </button>
           </div>
         </form>
       </aside>
@@ -293,6 +388,8 @@
       <div id="utility-body"></div>
     </aside>
     <div class="toast" id="toast" role="status" hidden></div>
-    <script src="demo.js"></script>
+    <script src="clocks.js?v=2"></script>
+    <script src="battle.js?v=2"></script>
+    <script src="demo.js?v=2"></script>
   </body>
 </html>

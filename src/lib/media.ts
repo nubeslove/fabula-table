@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Asset } from "../shared/types";
 import { apiUrl } from "./api";
+import { BASE_ART } from "../shared/base-library";
 let database: Promise<IDBDatabase> | undefined;
 function db() {
   return (database ??= new Promise<IDBDatabase>((resolve, reject) => {
@@ -138,7 +139,7 @@ export function useAssets(world: string, assets: Asset[]) {
     void Promise.all([worker(), worker(), worker()]);
   }, [world, assets.map((a) => a.id).join(","), attempt]);
   return {
-    urls: urls.current,
+    urls: { ...Object.fromEntries(BASE_ART.map(a=>[a.id, apiUrl("../"+a.path)])), ...urls.current },
     version,
     error,
     warning,

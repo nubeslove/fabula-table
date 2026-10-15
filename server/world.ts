@@ -1,3 +1,4 @@
+import { baseArtById } from "../src/shared/base-library";
 import { randomInt, randomUUID } from "node:crypto";
 import type {
   World,
@@ -81,7 +82,7 @@ function expected(actual: number | undefined, value: unknown) {
 function checkAssets(w: World, ids: string[]) {
   for (const id of ids.filter(Boolean))
     v.insist(
-      w.assets.some((a) => a.id === id),
+      baseArtById.has(id) || w.assets.some((a) => a.id === id),
       "引用的素材不存在",
     );
 }
@@ -140,6 +141,8 @@ export function project(w: World, me: Identity): World {
         c.classes = [];
         c.bonds = [];
         c.equipment = [];
+        c.inventory = [];
+        c.loadout = {};
         c.attrs = { dex: 6, ins: 6, mig: 6, wlp: 6 };
         c.overrides = {};
         c.modifiers = { hp: 0, mp: 0, ip: 0, def: 0, mdef: 0, initiative: 0 };
@@ -655,6 +658,14 @@ export function apply(w: World, me: Identity, input: unknown) {
       }
       break;
     }
+    case "battle.nextRound":
+      gm(me);
+      v.insist(w.battle.active && !w.battle.current, "请先结束当前行动");
+      w.battle.round++;
+      w.battle.acted = [];
+      w.battle.side = w.battle.first;
+      addLog(w, me, "action", `GM 开始第 ${w.battle.round} 轮`);
+      break;
     case "battle.stop":
       gm(me);
       w.battle.active = false;

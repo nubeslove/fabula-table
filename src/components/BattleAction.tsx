@@ -1,3 +1,4 @@
+import { AbilityReader } from "./AbilityReader";
 import { useState, useEffect } from "react";
 import type { Character, Command, Resource } from "../shared/types";
 import { derived, learnedAbilities } from "../shared/rules";
@@ -64,38 +65,24 @@ export function ActionContent({
             </select>
           </div>
           <p className="muted">声明发到战斗日志；掷骰、伤害和消耗分别处理。</p>
-          <div className="battle-ability-list">
-            {abilities.map((a) => (
-              <details key={a.id}>
-                <summary>
-                  {a.name}
-                  <small>{a.cost.includes("由 GM") ? "按说明" : a.cost}</small>
-                </summary>
-                <p className="preserve">{a.text}</p>
-                <button
-                  disabled={busy}
-                  onClick={() =>
-                    void run(
-                      { type: "declare", actor: c.id, ability: a.id },
-                      `已声明「${a.name}」`,
-                    )
-                  }
-                >
-                  声明使用
-                </button>
-              </details>
-            ))}
-            {!abilities.length && (
-              <p>没有匹配的能力，可在人物卡中添加自定义能力。</p>
-            )}
-          </div>
+          <AbilityReader
+            abilities={abilities}
+            disabled={busy}
+            onUse={(a) =>
+              void run(
+                { type: "declare", actor: c.id, ability: a.id },
+                `已声明「${a.name}」`,
+              )
+            }
+          />
         </>
       )}
       {kind === "roll" && <DiceControls character={c} act={act} />}
       {kind === "resources" && (
         <>
           <p>
-            HP {c.hp}/{derived(c).hp} · MP {c.mp}/{derived(c).mp} · IP {c.ip}
+            HP {c.hp}/{derived(c).hp} · MP {c.mp}/{derived(c).mp} · IP {c.ip} ·
+            泽尼特 {c.zenit}
           </p>
           <div className="form-grid">
             <Field label="资源">

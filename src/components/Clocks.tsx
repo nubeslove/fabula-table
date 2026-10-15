@@ -86,12 +86,35 @@ export function ClockManager({
       : null,
   );
   const [archived, setArchived] = useState(false);
+  const [query, setQuery] = useState(""),
+    [category, setCategory] = useState("all");
   const chosen = draft ?? world.clocks.find((c) => c.id === selected);
-  const list = world.clocks.filter((c) => archived || !c.archived);
+  const list = world.clocks.filter(
+    (c) =>
+      (archived || !c.archived) &&
+      (category === "all" || (category === "battle" ? !!c.scene : !c.scene)) &&
+      [c.name, c.description].join().includes(query),
+  );
   return (
     <Modal title="命刻 · 故事的进展" onClose={close} error={error} wide>
       <div className="clock-manager">
         <div className="clock-directory">
+          <input
+            type="search"
+            aria-label="搜索命刻"
+            placeholder="搜索命刻名称、含义…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <select
+            aria-label="命刻分类"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="all">全部命刻</option>
+            <option value="world">世界命刻</option>
+            <option value="battle">冲突命刻</option>
+          </select>
           {gm && (
             <button
               className="primary"

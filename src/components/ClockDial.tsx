@@ -99,6 +99,24 @@ export function ClockDial({
         d="M70 30 L73 35 L70 38 L67 35 Z M70 102 L73 105 L70 110 L67 105 Z"
         fill="#bda46c"
       />
+      <g
+        fill="none"
+        stroke="#c1ac73"
+        strokeWidth=".5"
+        opacity=".15"
+        aria-hidden="true"
+      >
+        {Array.from({ length: 8 }, (_, i) => (
+          <ellipse
+            key={i}
+            cx="70"
+            cy="57"
+            rx="9"
+            ry="22"
+            transform={`rotate(${45 * i} 70 70)`}
+          />
+        ))}
+      </g>
       <text x="70" y="55" className="dial-symbol" textAnchor="middle">
         {CLOCK_KINDS[kind].glyph}
       </text>

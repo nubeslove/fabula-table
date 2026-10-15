@@ -1,3 +1,4 @@
+import { AbilityReader } from "./AbilityReader";
 import { useState, useEffect } from "react";
 
 import { expansionName } from "../shared/expansions";
@@ -88,35 +89,7 @@ export function ExpansionResources({
         来源于世界已启用的扩展。前置条件与效果由 GM
         确认；加入后保存在人物卡中，可继续修改。
       </p>
-      <div className="expansion-entry-list">
-        {found.slice(current * 12, current * 12 + 12).map((r) => (
-          <details key={r.id}>
-            <summary>
-              <strong>{r.name}</strong>
-              <small>
-                {expansionName(r.expansion)} · {r.source}
-              </small>
-            </summary>
-            <p className="preserve">{r.text}</p>
-            <button
-              disabled={chosen.some((a) => a.id === r.id)}
-              onClick={() =>
-                add({
-                  id: r.id,
-                  name: r.name,
-                  text: r.text,
-                  cost: r.cost,
-                  source: r.source,
-                })
-              }
-            >
-              {chosen.some((a) => a.id === r.id)
-                ? "已加入人物卡"
-                : "＋ 加入人物卡"}
-            </button>
-          </details>
-        ))}
-      </div>
+      <AbilityReader abilities={found.slice(current*12,current*12+12)} label="加入人物卡" onUse={a=>{if(!chosen.some(x=>x.id===a.id))add(a)}}/>
       {!found.length && (
         <p className="empty">没有可用条目。GM 可在世界设置中启用扩展。</p>
       )}

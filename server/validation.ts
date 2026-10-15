@@ -72,7 +72,10 @@ export function character(v: unknown): Character {
       insist(Object.keys(skills).length <= 40, "技能过多");
       return {
         id: id(a.id),
-        boost:a.boost===undefined?undefined:one(a.boost,["hp","mp","ip"] as const),
+        boost:
+          a.boost === undefined
+            ? undefined
+            : one(a.boost, ["hp", "mp", "ip"] as const),
         ...(a.name ? { name: str(a.name, 80) } : {}),
         level: int(a.level, 1, 50),
         skills: Object.fromEntries(
@@ -108,9 +111,80 @@ export function character(v: unknown): Character {
       name: str(a.name, 100),
       text: str(a.text, 10000),
       cost: str(a.cost, 200),
+      source: a.source === undefined ? undefined : str(a.source, 300),
+      target: a.target === undefined ? undefined : str(a.target, 200),
+      duration: a.duration === undefined ? undefined : str(a.duration, 100),
     };
   });
   unique(abilities.map((x) => x.id));
+  const inventory =
+    c.inventory === undefined
+      ? undefined
+      : list(
+          c.inventory,
+          (x) => {
+            const e = obj(x);
+            return {
+              id: id(e.id),
+              name: str(e.name, 100),
+              kind: one(e.kind, [
+                "weapon",
+                "shield",
+                "armor",
+                "accessory",
+                "item",
+              ] as const),
+              template:
+                e.template === undefined
+                  ? undefined
+                  : one(
+                      e.template,
+                      EQUIPMENT.map((e) => e.id),
+                    ),
+              quantity: int(e.quantity, 1, 999),
+              cost: int(e.cost, 0),
+              hands: int(e.hands, 0, 2),
+              check: str(e.check, 100),
+              damage: int(e.damage, 0, 999),
+              damageType: str(e.damageType, 30),
+              description: str(e.description, 5000),
+              def: int(e.def, -100, 100),
+              mdef: int(e.mdef, -100, 100),
+              initiative: int(e.initiative, -100, 100),
+              fixed: e.fixed === undefined ? undefined : int(e.fixed, 0, 999),
+              training:
+                e.training === undefined
+                  ? undefined
+                  : one(e.training, ["melee", "ranged", "armor", "shield"]),
+            };
+          },
+          200,
+        );
+  if (inventory) unique(inventory.map((e) => e.id));
+  const rawLoadout = c.loadout === undefined ? {} : obj(c.loadout);
+  const loadout: Character["loadout"] = {};
+  if (inventory)
+    for (const slot of ["main", "off", "armor", "accessory"] as const) {
+      if (!rawLoadout[slot]) continue;
+      const value = id(rawLoadout[slot]);
+      const item = inventory.find((e) => e.id === value);
+      insist(item, "装备槽引用了不存在的物品");
+      insist(
+        slot === "main" || slot === "off"
+          ? item.kind === "weapon" || item.kind === "shield"
+          : item.kind === slot,
+        "物品不能放入此装备槽",
+      );
+      loadout[slot] = value;
+    }
+  if (inventory) {
+    const main = inventory.find((e) => e.id === loadout.main),
+      off = inventory.find((e) => e.id === loadout.off);
+    if (main?.hands === 2 || off?.hands === 2)
+      insist(main?.id === off?.id, "双手装备需要占用两只手");
+    if (main && main.id === off?.id && main.hands !== 2)
+      insist(main.quantity >= 2, "同一物品双持需要至少两件");
+  }
   return {
     id: id(c.id),
     revision: int(c.revision, 0),
@@ -160,6 +234,8 @@ export function character(v: unknown): Character {
     statuses: unique(list(c.statuses, (x) => one(x, STATUS), 6)),
     abilities,
     equipment,
+    inventory,
+    loadout: inventory ? loadout : undefined,
     gearNotes: str(c.gearNotes),
     portrait: asset(c.portrait),
     expressions,
@@ -240,7 +316,10 @@ export function clock(v: unknown): Clock {
   return {
     id: id(c.id),
     scene: c.scene ? id(c.scene) : undefined,
-    placement:c.placement===undefined?"upper":one(c.placement,["upper","lower"] as const),
+    placement:
+      c.placement === undefined
+        ? "upper"
+        : one(c.placement, ["upper", "lower"] as const),
     name: str(c.name, 100).trim(),
     segments,
     value: int(c.value, 0, segments),

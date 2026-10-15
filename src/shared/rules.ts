@@ -1,5 +1,13 @@
 import data from "./core-catalog.json";
-import type { Ability, Attribute, Character, Scene, World } from "./types";
+import type {
+  Ability,
+  Attribute,
+  Character,
+  Scene,
+  World,
+  InventoryItem,
+  EquipmentSlot,
+} from "./types";
 import expansions from "./expansion-catalog.json";
 export interface ClassDefinition {
   id: string;
@@ -308,6 +316,62 @@ export const EQUIPMENT: Equipment[] = [
     mdef: 2,
   },
 ];
+export function inventoryItem(template: string, id: string): InventoryItem {
+  const e = EQUIPMENT.find((e) => e.id === template);
+  return {
+    id,
+    template: e?.id,
+    name: e?.name ?? "自定义物品",
+    kind: e?.kind ?? "item",
+    quantity: 1,
+    cost: e?.cost ?? 0,
+    hands: e?.hands ?? 0,
+    check: e?.check ?? "",
+    damage: e?.damage ?? 0,
+    damageType: "物理",
+    description: "",
+    def: e?.def ?? 0,
+    mdef: e?.mdef ?? 0,
+    initiative: e?.initiative ?? 0,
+    fixed: e?.fixed,
+    training: e?.training,
+  };
+}
+export function characterInventory(c: Character) {
+  return (
+    c.inventory ??
+    c.equipment.map((id, i) => inventoryItem(id, `legacy-${i}-${id}`))
+  );
+}
+export function characterLoadout(
+  c: Character,
+): Partial<Record<EquipmentSlot, string>> {
+  if (c.inventory !== undefined) return c.loadout ?? {};
+  const slots: Partial<Record<EquipmentSlot, string>> = {};
+  for (const e of characterInventory(c)) {
+    if (e.kind === "armor") slots.armor ??= e.id;
+    else if (e.kind === "shield") {
+      if (!slots.off) slots.off = e.id;
+      else slots.main ??= e.id;
+    } else if (e.kind === "weapon") {
+      if (!slots.main) slots.main = e.id;
+      else if (!slots.off) slots.off = e.id;
+      if (e.hands === 2) slots.off = e.id;
+    }
+  }
+  return slots;
+}
+export function equippedItems(c: Character) {
+  if (c.inventory === undefined) return characterInventory(c);
+  const ids = new Set(Object.values(c.loadout ?? {}));
+  return characterInventory(c).flatMap((e) =>
+    !ids.has(e.id)
+      ? []
+      : c.loadout?.main === e.id && c.loadout?.off === e.id && e.hands === 1
+        ? [e, e]
+        : [e],
+  );
+}
 export function currentAttributes(c: Character) {
   const a = { ...c.attrs };
   const down = (key: Attribute) => (a[key] = Math.max(6, a[key] - 2));
@@ -342,9 +406,7 @@ export function derived(c: Character) {
       })
       .filter((x) => !!x),
     a = currentAttributes(c),
-    gear = c.equipment
-      .map((id) => EQUIPMENT.find((e) => e.id === id))
-      .filter((x) => !!x),
+    gear = equippedItems(c),
     armor = gear.find((e) => e.kind === "armor");
   const rank = (id: string) =>
     c.classes.reduce((n, x) => n + (x.skills[id] ?? 0), 0);
@@ -383,7 +445,7 @@ export function derived(c: Character) {
     ...result,
     level,
     crisis: Math.floor(result.hp / 2),
-    cost: gear.reduce((n, e) => n + e.cost, 0),
+    cost: characterInventory(c).reduce((n, e) => n + e.cost * e.quantity, 0),
   };
 }
 export function characterProblems(c: Character, initial = false) {
@@ -424,7 +486,7 @@ export function characterProblems(c: Character, initial = false) {
         (x) => CLASSES.find((k) => k.id === x.id)?.training ?? [],
       ),
     ),
-    gear = c.equipment.map((id) => EQUIPMENT.find((e) => e.id === id)!);
+    gear = equippedItems(c);
   if (gear.filter((x) => x.kind === "armor").length > 1)
     errors.push("只能穿一件防具");
   if (gear.reduce((n, e) => n + (e.hands ?? 0), 0) > 2)
@@ -449,19 +511,15 @@ export function learnedAbilities(c: Character): Ability[] {
             source: `${CLASSES.find((k) => k.id === x.id)?.name ?? "职业"} · ${CLASSES.find((k) => k.id === x.id)?.expansion ? "扩展" : "核心"}`,
           })) ?? [],
     ),
-    ...c.equipment.flatMap((id) => {
-      const e = EQUIPMENT.find((g) => g.id === id);
-      return e?.kind === "weapon"
-        ? [
-            {
-              id: "gear:" + id,
-              name: e.name,
-              text: `命中：${e.check}；伤害：HR + ${e.damage}，物理。请另行掷骰，GM 确认伤害。`,
-              cost: "动作",
-            },
-          ]
-        : [];
-    }),
+    ...equippedItems(c)
+      .filter((e) => e.kind === "weapon")
+      .map((e, index) => ({
+        id: `gear:${e.id}:${index}`,
+        name: e.name,
+        text: `命中：${e.check}；伤害：HR + ${e.damage}，${e.damageType}。${e.description} 请另行掷骰，GM 确认伤害。`,
+        cost: "动作",
+        source: "装备",
+      })),
     ...c.abilities,
   ];
 }

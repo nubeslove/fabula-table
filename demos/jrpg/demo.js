@@ -31,7 +31,14 @@ const state = {
   line: 0,
   notes: [],
   custom: {},
-  unread: new Set(),
+  unread: new Set(["ooc", "combat"]),
+  partyCount: 4,
+  enemyCount: 4,
+  battlePages: { ally: 0, enemy: 0 },
+  acted: new Set(),
+  clockOpen: "",
+  clockFilter: "all",
+  clockSearch: "",
 };
 const people = {
   lina: {
@@ -289,6 +296,25 @@ const clocks = [
     extra: true,
   },
 ];
+clocks.push(
+  ...[
+    ["beacon", "点亮北岸的三座灯塔", "远行准备", 1, 6],
+    ["alliance", "争取钟塔守卫的信任", "关系与承诺", 2, 8],
+    ["flood", "湖水上涨", "环境危机", 2, 6],
+    ["letter", "解开信中的暗号", "调查线索", 0, 4],
+    ["ship", "修好渡船", "旅程目标", 3, 6],
+    ["echo", "寻找失落的钟声", "主线线索", 1, 8],
+    ["supplies", "准备越过迷雾森林的补给", "旅行准备", 2, 6],
+    ["dawn", "与黎明的约定", "人物故事", 1, 4],
+  ].map(([id, name, meaning, value, max]) => ({
+    id,
+    name,
+    meaning,
+    value,
+    max,
+    extra: true,
+  })),
+);
 const channelNames = {
   ic: "场内",
   ooc: "场外",
@@ -345,40 +371,6 @@ function toast(text) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => ($("toast").hidden = true), 3200);
 }
-function clockMarkup(c) {
-  const r = 21,
-    circ = 2 * Math.PI * r,
-    seg = circ / c.max;
-  return `<div class="clock" data-clock="${c.id}"><div class="clock-meter"><svg viewBox="0 0 60 60" aria-label="${esc(c.name)} ${c.value}/${c.max}"><circle class="rim" cx="30" cy="30" r="29"/><circle class="rim" cx="30" cy="30" r="25"/><circle class="dial-base" cx="30" cy="30" r="21"/><g transform="rotate(-90 30 30)">${Array.from({ length: c.max }, (_, i) => `<circle class="dial" style="stroke:${i < c.value ? "#d8bc7f" : "#456279"}" cx="30" cy="30" r="21" stroke-dasharray="${seg - 3} ${circ - seg + 3}" stroke-dashoffset="${-i * seg}"/>`).join("")}</g><path class="ticks" d="M30 0v7M30 53v7M0 30h7M53 30h7"/><text x="30" y="31">${c.value}</text></svg><div class="clock-controls"><button data-clock-id="${c.id}" data-delta="-1" aria-label="撤回${esc(c.name)}">−</button><button data-clock-id="${c.id}" data-delta="1" aria-label="推进${esc(c.name)}">+</button></div></div><div class="clock-info"><b>${esc(c.name)} <small>${c.value}/${c.max}</small></b><small>${esc(c.meaning)}</small></div></div>`;
-}
-function renderClocks() {
-  $("global-clocks").innerHTML = clocks
-    .filter((c) => !c.area && !c.extra)
-    .map(clockMarkup)
-    .join("");
-  $("upper-clocks").innerHTML = clocks
-    .filter((c) => c.area === "upper")
-    .map(clockMarkup)
-    .join("");
-  $("lower-clocks").innerHTML = clocks
-    .filter((c) => c.area === "lower")
-    .map(clockMarkup)
-    .join("");
-  if (!$("utility").hidden && $("utility").dataset.kind === "clocks")
-    $("utility-body").innerHTML =
-      '<p class="gear-note">优先显示的命刻横排；冲突命刻留在对应半场。悬停或聚焦刻度盘可手动加减。</p>' +
-      clocks.map(clockMarkup).join("");
-}
-document.addEventListener("click", (e) => {
-  const b = e.target.closest("[data-clock-id]");
-  if (!b) return;
-  const c = clocks.find((x) => x.id === b.dataset.clockId);
-  c.value = Math.min(c.max, Math.max(0, c.value + Number(b.dataset.delta)));
-  renderClocks();
-  document
-    .querySelector(`[data-clock-id="${c.id}"][data-delta="${b.dataset.delta}"]`)
-    ?.focus();
-});
 function setMode(mode) {
   state.mode = mode;
   document.querySelectorAll("[data-mode]").forEach((b) => {
@@ -394,6 +386,8 @@ function setMode(mode) {
   $("scene-title").textContent = mode === "explore" ? "钟塔回廊" : "星落钟塔";
   if (mode === "explore") renderMap();
   $("sheet").hidden = true;
+  toggleSceneClocks(state.clockOpen || "upper", false);
+  if (mode === "conflict") requestAnimationFrame(renderCombat);
 }
 document
   .querySelectorAll("button[data-mode]")
@@ -427,74 +421,6 @@ function renderCast() {
 $("next-line").onclick = () => {
   state.line++;
   renderCast();
-};
-function renderCombat() {
-  const friends = Object.entries(people).map(([id, p]) => ({
-    id,
-    name: p.short,
-    hp: p.hp,
-    mp: p.mp,
-    z: p.z,
-    glyph: p.sign,
-    color: p.color,
-  }));
-  const enemies = [
-    { id: "mist", name: "雾狼", hp: 40, mp: 20, glyph: "雾", color: "#67566b" },
-    {
-      id: "crystal",
-      name: "晶壳守卫",
-      hp: 65,
-      mp: 35,
-      glyph: "晶",
-      color: "#3b6170",
-    },
-    {
-      id: "envoy",
-      name: "黑帆斥候",
-      hp: 45,
-      mp: 30,
-      glyph: "黑",
-      color: "#5d4861",
-    },
-  ];
-  function row(arr) {
-    return arr
-      .map(
-        (p, i) =>
-          `<button class="combatant ${p.id === "lina" ? "active" : ""}" data-combatant="${p.id}" aria-label="${p.name}的行动"><span class="turn-mark">${p.id === "lina" ? "◆ 行动中" : i === 0 ? "待行动" : "待行动"}</span><span class="avatar" style="background:${p.color}">${p.id === "lina" ? '<img src="assets/silver-wayfarer.webp" alt="">' : p.glyph}</span><b class="combatant-name">${p.name}</b><i class="health-line"></i><span class="combatant-data">HP ${p.hp}　MP ${p.mp}${p.z === undefined ? "" : `<br><span class="gold">泽尼特 ${p.z.toLocaleString()} Z</span>`}</span></button>`,
-      )
-      .join("");
-  }
-  $("allies").innerHTML = row(friends);
-  $("enemies").innerHTML = row(enemies);
-  document.querySelectorAll("[data-combatant]").forEach(
-    (b) =>
-      (b.onclick = () => {
-        if (b.dataset.combatant === "lina") openActions();
-        else {
-          const p = [...friends, ...enemies].find(
-            (x) => x.id === b.dataset.combatant,
-          );
-          showUtility(
-            p.name,
-            `<article><h3>当前状态</h3><p>HP ${p.hp} · MP ${p.mp}</p><p>${people[p.id] ? "泽尼特 " + people[p.id].z + " Z" : "非玩家角色 · 对方阵营"}</p></article><article><h3>行动记录</h3><p>此角色用于展示 2D token 对峙。本版完整角色卡以莉娜为样例。</p></article><button class="primary" id="record-other">记录 ${p.name} 已行动</button>`,
-            "actor",
-          );
-          $("record-other").onclick = () => {
-            addMessage("combat", p.name, "完成了本轮行动（演示记录）。");
-            b.querySelector(".turn-mark").textContent = "✓ 已行动";
-            $("utility").hidden = true;
-            toast("已记录行动");
-          };
-        }
-      }),
-  );
-}
-$("round-next").onclick = () => {
-  state.round++;
-  $("round-label").textContent = `第 ${state.round} 轮`;
-  renderCombat();
-  addMessage("combat", "GM", `开始第 ${state.round} 轮。`);
 };
 function blocked(x, y) {
   return (
@@ -884,7 +810,7 @@ function renderMessages() {
   $("channels").innerHTML = Object.entries(channelNames)
     .map(
       ([id, name]) =>
-        `<button class="${id === state.channel ? "active" : ""}" data-channel="${id}">${name}${state.unread.has(id) ? '<i class="unread">!</i>' : ""}</button>`,
+        `<button class="${id === state.channel ? "active" : ""}" data-channel="${id}">${name}${state.unread.has(id) ? '<i class="unread" aria-label="有新消息">!</i>' : ""}</button>`,
     )
     .join("");
   $("top-unread").hidden = state.unread.size === 0;
@@ -924,14 +850,37 @@ $("chat-text").onkeydown = (e) => {
     if (!e.repeat) sendChat();
   }
 };
-$("simulate-message").onclick = () => {
-  const target = state.channel === "ooc" ? "ic" : "ooc";
-  addMessage(
-    target,
-    target === "ooc" ? "小岚 · 玩家" : "雷恩",
-    target === "ooc" ? "我准备好了，随时可以继续。" : "门的另一边，好像有光。",
+$("demo-options").onclick = () => {
+  showUtility(
+    "演示选项",
+    `<article><h3>多人阵型</h3><p>冲突顶部可以分别选择双方人数。较多敌人排成两排；窗口过窄时按页查看。</p><button id="demo-large-battle" class="primary">查看 12 对 16</button></article><article><h3>频道新消息</h3><p>选择接收频道，模拟另一名玩家发言，查看黄色感叹号气泡。</p><label>接收频道 <select id="demo-message-channel">${Object.entries(
+      channelNames,
+    )
+      .map(([id, n]) => `<option value="${id}">${n}</option>`)
+      .join(
+        "",
+      )}</select></label><button id="simulate-message" class="primary">模拟一条新消息</button></article>`,
+    "demo",
   );
-  toast("已模拟收到另一频道的新消息");
+  $("demo-message-channel").value = state.channel === "ooc" ? "ic" : "ooc";
+  $("simulate-message").onclick = () => {
+    const target = $("demo-message-channel").value;
+    addMessage(
+      target,
+      "小岚 · 演示来信",
+      "这是一条刚收到的消息。对应频道会显示黄色感叹号。",
+    );
+    toast("已模拟一条新消息");
+  };
+  $("demo-large-battle").onclick = () => {
+    state.partyCount = 12;
+    state.enemyCount = 16;
+    $("party-count").value = "12";
+    $("enemy-count").value = "16";
+    state.battlePages = { ally: 0, enemy: 0 };
+    setMode("conflict");
+    $("utility").hidden = true;
+  };
 };
 $("chat-toggle").onclick = () => {
   const closed = $("table").classList.toggle("chat-hidden");
@@ -940,9 +889,14 @@ $("chat-toggle").onclick = () => {
 };
 $("dice-toggle").onclick = () => {
   $("dice-drawer").hidden = !$("dice-drawer").hidden;
+  $("dice-toggle").setAttribute(
+    "aria-expanded",
+    String(!$("dice-drawer").hidden),
+  );
 };
 $("dice-close").onclick = () => {
   $("dice-drawer").hidden = true;
+  $("dice-toggle").setAttribute("aria-expanded", "false");
   $("dice-toggle").focus();
 };
 document.querySelectorAll("[data-dice-count]").forEach(
@@ -984,10 +938,6 @@ function showUtility(title, html, kind) {
 $("utility-close").onclick = () => {
   $("utility").hidden = true;
 };
-$("clock-more").onclick = () => {
-  showUtility("所有命刻", "", "clocks");
-  renderClocks();
-};
 function showJournal() {
   showUtility(
     "冒险手记",
@@ -1026,9 +976,14 @@ document.querySelectorAll("[data-person]").forEach(
 );
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
+  if (state.clockOpen) {
+    toggleSceneClocks(state.clockOpen, false);
+    return;
+  }
   if (!$("utility").hidden) $("utility").hidden = true;
   else if (!$("dice-drawer").hidden) {
     $("dice-drawer").hidden = true;
+    $("dice-toggle").setAttribute("aria-expanded", "false");
     $("dice-toggle").focus();
   } else if (!$("sheet").hidden) closeSheet();
 });
@@ -1036,12 +991,16 @@ if (innerWidth <= 650) {
   $("table").classList.add("chat-hidden");
   $("chat-toggle").setAttribute("aria-label", "展开聊天");
 }
+bindClocks();
+bindBattle();
 renderClocks();
 renderCast();
 renderCombat();
 renderMap();
 renderMessages();
-if (location.hash === "#gear") {
+if (location.hash === "#battle") {
+  setMode("conflict");
+} else if (location.hash === "#gear") {
   setMode("conflict");
   openSheet("gear");
 } else if (location.hash === "#spells") {

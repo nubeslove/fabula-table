@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Clock, Command } from "../shared/types";
 import { displayClocks } from "../shared/clocks";
 import { ClockDial } from "./ClockDial";
@@ -9,75 +9,80 @@ export function BattleClocks({
   gm,
   open,
   act,
-  perPage,
+  collapsed,
 }: {
-  perPage: number;
+  collapsed: boolean;
   clocks: Clock[];
   placement: "upper" | "lower";
   gm: boolean;
   open: (id?: string, placement?: "upper" | "lower") => void;
   act: (c: Command) => Promise<boolean>;
 }) {
-  const [page, setPage] = useState(0),
-    entries = displayClocks(clocks).filter(
-      (c) => (c.placement ?? "upper") === placement,
-    ),
-    pages = Math.ceil(entries.length / perPage),
-    current = Math.min(page, Math.max(0, pages - 1));
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, []);
+  const entries = displayClocks(clocks).filter(
+    (c) => (c.placement ?? "upper") === placement,
+  );
+  const label = placement === "upper" ? "上半场命刻" : "下半场命刻";
+  if (!entries.length && !gm) return null;
+  const tucked = collapsed || entries.length > 1;
   return (
-    <section
-      className={`battle-clocks ${placement}`}
-      aria-label={placement === "upper" ? "上半场命刻" : "下半场命刻"}
-    >
-      <header>
-        <span>冲突命刻</span>
-        {pages > 1 && (
-          <>
-            <button
-              aria-label={`${placement === "upper" ? "上半场" : "下半场"}上一组命刻`}
-              disabled={!current}
-              onClick={() => setPage(current - 1)}
-            >
-              ‹
-            </button>
-            <small>
-              {current + 1}/{pages}
-            </small>
-            <button
-              aria-label={`${placement === "upper" ? "上半场" : "下半场"}下一组命刻`}
-              disabled={current + 1 >= pages}
-              onClick={() => setPage(current + 1)}
-            >
-              ›
-            </button>
-          </>
-        )}
-        {gm && (
-          <button title="创建冲突命刻" onClick={() => open("new", placement)}>
-            ＋
-          </button>
-        )}
-      </header>
-      <div className="battle-clocks-row">
-        {entries
-          .slice(current * perPage, current * perPage + perPage)
-          .map((c) => (
-            <article className="battle-clock" key={c.id}>
+    <>
+      <button
+        className={`scene-clock-tab ${placement}`}
+        aria-label={label}
+        aria-expanded={expanded}
+        onClick={() => setExpanded(!expanded)}
+      >
+        ✧ {label} {entries.length} {expanded ? "收起" : "展开"}
+      </button>
+      {(!tucked || expanded) && (
+        <section
+          className={`scene-clocks ${placement} ${expanded ? "opened" : "floating"}`}
+          aria-label={label + "内容"}
+        >
+          <header>
+            <strong>{label}</strong>
+            {gm && (
+              <button onClick={() => open("new", placement)}>＋ 创建</button>
+            )}
+            {expanded && (
               <button
-                className="battle-clock-open"
-                title={c.description}
-                onClick={() => open(c.id)}
+                aria-label={"收起" + label}
+                onClick={() => setExpanded(false)}
               >
-                <ClockDial clock={c} />
-                <strong>{c.name}</strong>
-                <small>
-                  {c.value}/{c.segments}
-                </small>
+                ×
               </button>
-              {gm && <ClockQuickControls clock={c} act={act} />}
-            </article>
-          ))}
-      </div>
-    </section>
+            )}
+          </header>
+          <div className="scene-clock-list">
+            {entries.map((c) => (
+              <article className="ornate-clock" key={c.id}>
+                <ClockDial clock={c} />
+                <div>
+                  <button className="clock-title" onClick={() => open(c.id)}>
+                    {c.name}
+                  </button>
+                  <p>{c.description}</p>
+                  <b>
+                    {c.value} / {c.segments} 格
+                  </b>
+                  {gm && <ClockQuickControls clock={c} act={act} />}
+                </div>
+              </article>
+            ))}
+            {!entries.length && (
+              <p className="muted">在这里记录本场冲突的目标或危险。</p>
+            )}
+          </div>
+        </section>
+      )}
+    </>
   );
 }

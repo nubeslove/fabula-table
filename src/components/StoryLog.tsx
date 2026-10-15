@@ -253,6 +253,14 @@ export function StoryLog({
           ) : (
             <strong>{me.name}</strong>
           )}
+          <button
+            type="button"
+            ref={diceButton}
+            aria-expanded={diceOpen}
+            onClick={() => setDiceOpen(!diceOpen)}
+          >
+            ⚄ 掷骰
+          </button>
         </div>
         <textarea
           aria-label="聊天内容"
@@ -270,14 +278,6 @@ export function StoryLog({
         />
         <div>
           <small>Enter 发送 · Shift+Enter 换行</small>
-          <button
-            type="button"
-            ref={diceButton}
-            aria-expanded={diceOpen}
-            onClick={() => setDiceOpen(!diceOpen)}
-          >
-            ⚄ 掷骰
-          </button>
           <button
             className="primary"
             disabled={busy || !text.trim() || (mode === "ic" && !actor)}

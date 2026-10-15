@@ -16,6 +16,7 @@ export function CharacterVitals({
           ["mp", "魔力", creation ? d.mp : c.mp, d.mp],
           ["ip", "物资", creation ? d.ip : c.ip, d.ip],
           ["fabula", "物语点", c.fabula, null],
+          ["zenit", "泽尼特", c.zenit, null],
         ] as const
       ).map(([key, label, value, max]) => (
         <div className={`vital ${key}`} key={key}>

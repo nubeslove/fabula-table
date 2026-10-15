@@ -7,8 +7,8 @@
   height: 16px;
   margin-left: 3px;
   border-radius: 50%;
-  background: #a83b36;
-  color: #fff;
+  background: #e7bd38;
+  color: #4b3909;
   font-size: 12px;
   font-weight: 800;
   line-height: 1;
@@ -89,12 +89,36 @@
   margin-bottom: 10px;
 }
 .game-table .chat-compose > div:last-child {
-  gap: 5px;
-  flex-wrap: wrap;
-}
-.game-table .chat-compose > div:last-child small {
-  flex-basis: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  gap: 8px;
+  align-items: center;
 }
 .game-table .chat-compose > div:last-child button {
-  flex: 1;
+  width: 76px;
+  min-height: 34px;
+  white-space: nowrap;
+}
+.game-table .chat-identity {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.game-table .chat-identity > button {
+  margin-left: auto;
+  white-space: nowrap;
+  flex: none;
+}
+.log-filter button {
+  position: relative;
+  overflow: visible;
+}
+.log-filter .unread-badge {
+  position: absolute;
+  right: -4px;
+  top: -7px;
+  border: 2px solid #fffdf7;
+  width: 19px;
+  height: 19px;
+  box-shadow: 0 2px 5px #795e282b;
 }

@@ -13,12 +13,33 @@ export interface Ability {
   text: string;
   cost: string;
   source?: string;
+  target?: string;
+  duration?: string;
 }
 export interface Expression {
   id: string;
   name: string;
   asset: string;
 }
+export interface InventoryItem {
+  id: string;
+  name: string;
+  kind: "weapon" | "shield" | "armor" | "accessory" | "item";
+  template?: string;
+  quantity: number;
+  cost: number;
+  hands: number;
+  check: string;
+  damage: number;
+  damageType: string;
+  description: string;
+  def: number;
+  mdef: number;
+  initiative: number;
+  fixed?: number;
+  training?: string;
+}
+export type EquipmentSlot = "main" | "off" | "armor" | "accessory";
 export interface Character {
   id: string;
   revision: number;
@@ -56,6 +77,8 @@ export interface Character {
   statuses: string[];
   abilities: Ability[];
   equipment: string[];
+  inventory?: InventoryItem[];
+  loadout?: Partial<Record<EquipmentSlot, string>>;
   gearNotes: string;
   portrait: string;
   expressions: Expression[];
@@ -188,6 +211,7 @@ export interface Session {
   preloadKey?: string;
 }
 export type Command =
+  | { type: "battle.nextRound" }
   | { type: "character.save"; value: Character; expected: number | null }
   | { type: "character.delete"; id: string }
   | {

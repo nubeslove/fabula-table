@@ -33,14 +33,16 @@ export function AbilityReader({
   label = "声明使用",
   disabled = false,
   canUse = () => true,
+  initialId = "",
 }: {
   abilities: Ability[];
   onUse?: (a: Ability) => void;
   label?: string;
   disabled?: boolean;
   canUse?: (a: Ability) => boolean;
+  initialId?: string;
 }) {
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState(initialId);
   const a = abilities.find((a) => a.id === selected) ?? abilities[0];
   return (
     <div className="entry-workspace ability-reader">

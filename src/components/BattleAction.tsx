@@ -1,9 +1,8 @@
 import { AbilityReader } from "./AbilityReader";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { Character, Command, Resource } from "../shared/types";
 import { derived, learnedAbilities } from "../shared/rules";
 import { DiceControls } from "./DiceControls";
-import { CharacterVitals } from "./CharacterVitals";
 import { Field, ErrorText } from "./Common";
 export type BattleActionKind = "abilities" | "roll" | "resources";
 export function ActionContent({
@@ -12,12 +11,14 @@ export function ActionContent({
   gm,
   act,
   error,
+  initialAbility,
 }: {
   character: Character;
   kind: BattleActionKind;
   gm: boolean;
   act: (c: Command) => Promise<boolean>;
   error: string;
+  initialAbility?: string;
 }) {
   const [query, setQuery] = useState(""),
     [category, setCategory] = useState("全部"),
@@ -67,6 +68,7 @@ export function ActionContent({
           <p className="muted">声明发到战斗日志；掷骰、伤害和消耗分别处理。</p>
           <AbilityReader
             abilities={abilities}
+            initialId={initialAbility}
             disabled={busy}
             onUse={(a) =>
               void run(
@@ -80,10 +82,6 @@ export function ActionContent({
       {kind === "roll" && <DiceControls character={c} act={act} />}
       {kind === "resources" && (
         <>
-          <p>
-            HP {c.hp}/{derived(c).hp} · MP {c.mp}/{derived(c).mp} · IP {c.ip} ·
-            泽尼特 {c.zenit}
-          </p>
           <div className="form-grid">
             <Field label="资源">
               <select
@@ -145,39 +143,5 @@ export function ActionContent({
       )}
       <ErrorText text={error} />
     </div>
-  );
-}
-
-export function BattleAction(
-  props: Parameters<typeof ActionContent>[0] & { close: () => void },
-) {
-  useEffect(() => {
-    const key = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !document.querySelector("dialog[open]"))
-        props.close();
-    };
-    window.addEventListener("keydown", key);
-    return () => window.removeEventListener("keydown", key);
-  }, [props.close]);
-  return (
-    <section
-      className="battle-action-drawer"
-      aria-label={`${props.character.name}的行动抽屉`}
-    >
-      <header>
-        <div>
-          <small>角色行动</small>
-          <strong>
-            {props.character.name} ·{" "}
-            {{ abilities: "能力", roll: "掷骰", resources: "资源" }[props.kind]}
-          </strong>
-        </div>
-        <button aria-label="收起行动抽屉" onClick={props.close}>
-          ⌄ 收起
-        </button>
-      </header>
-      <CharacterVitals character={props.character} />
-      <ActionContent {...props} />
-    </section>
   );
 }

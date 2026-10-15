@@ -212,10 +212,6 @@ test("场景编辑不回写探索状态；进行中结构更改需要结束；�
       /先结束/,
     );
   }
-  assert.throws(
-    () => apply(w, gm, { type: "character.delete", id: "a" }),
-    /先结束/,
-  );
   const hiddenActor = structuredClone(w.characters.find((c) => c.id === "a")!);
   hiddenActor.public = false;
   assert.throws(

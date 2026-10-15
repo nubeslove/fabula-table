@@ -73,17 +73,31 @@
   color: #203e32;
   text-shadow: 0 1px 2px #fff;
   overflow: hidden;
-  background: #f5f6eb44;
+  background: transparent;
+  border-color: transparent;
+  max-width: 200px;
+  justify-self: center;
 }
-.revised-battle .battle-unit:hover,
-.revised-battle .battle-unit.inspected {
-  background: #f9fbedaa;
-  border-color: #577754;
-}
+.revised-battle .battle-unit:hover:not(:disabled),
+.revised-battle .battle-unit.inspected,
 .revised-battle .battle-unit.acting {
-  border-color: #9b7a29;
-  box-shadow: inset 0 0 0 1px #c4a654;
-  background: #f8f1cd88;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.revised-battle .battle-unit:hover .battle-figure img,
+.revised-battle .battle-unit.inspected .battle-figure img {
+  filter: drop-shadow(0 0 5px #fff7cf);
+}
+.revised-battle .battle-unit.acting .battle-unit-state {
+  color: #755300;
+  font-weight: bold;
+  text-shadow: 0 0 4px #fff;
+}
+.revised-battle .battle-unit.inspected > strong {
+  text-decoration: underline;
+  text-decoration-color: #b49a42;
+  text-underline-offset: 3px;
 }
 .revised-battle .battle-unit-state {
   flex: none;
@@ -136,7 +150,7 @@
   margin: 0;
 }
 .revised-battle .battle-vitals {
-  width: 100%;
+  width: min(100%, 130px);
   flex: none;
   margin: 0;
 }
@@ -204,138 +218,177 @@
 .revised-battle .battle-selected strong {
   font-size: 16px;
 }
-.revised-battle .battle-action-drawer {
-  left: 38px;
-  right: 38px;
-  width: auto;
-  bottom: 65px;
-  height: min(360px, 65%);
-  background: #fffdf7f5;
+/* Edge arrows and transparent, horizontally sliding clock faces. */
+.battle-clock-arrow {
+  position: absolute;
+  z-index: 14;
+  width: 28px;
+  height: 42px;
+  padding: 5px;
+  border: 0;
+  background: #fff9e7c9;
+  color: #30594b;
+  display: grid;
+  place-items: center;
 }
-.scene-clock-tab {
+.battle-clock-arrow.upper {
+  left: 0;
+  top: 25%;
+  border-radius: 0 16px 16px 0;
+}
+.battle-clock-arrow.lower {
+  right: 0;
+  top: 68%;
+  border-radius: 16px 0 0 16px;
+}
+.battle-clock-arrow svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  transition: transform 0.22s ease;
+}
+.battle-clock-flyout {
   position: absolute;
   z-index: 12;
-  top: 46%;
-  width: 32px;
-  writing-mode: vertical-rl;
-  letter-spacing: 2px;
-  padding: 10px 6px;
-  background: #f7f7e9ec;
-  color: #28564b;
-  border: 1px solid #9cae83;
-  border-radius: 0 8px 8px 0;
+  max-width: calc(100% - 70px);
+  background: none;
+  border: 0;
+  box-shadow: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    transform 0.25s ease,
+    opacity 0.2s ease,
+    visibility 0.25s;
 }
-.scene-clock-tab.upper {
-  left: 0;
+.battle-clock-flyout.upper {
+  left: 34px;
+  top: 72px;
+  transform: translateX(calc(-100% - 36px));
 }
-.scene-clock-tab.lower {
-  right: 0;
-  border-radius: 8px 0 0 8px;
+.battle-clock-flyout.lower {
+  right: 34px;
+  bottom: 80px;
+  transform: translateX(calc(100% + 36px));
 }
-.scene-clocks {
-  position: absolute;
-  z-index: 10;
-  width: 340px;
-  max-width: calc(100% - 76px);
-  color: #254c3c;
-  background: #fffdf7f5;
-  border: 1px solid #a6b38e;
-  box-shadow: 0 5px 25px #183e3033;
-  border-radius: 8px;
+.battle-clock-flyout.is-open {
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.battle-clock-faces {
+  display: flex;
+  gap: 12px;
+  align-items: start;
+}
+.battle-clock-face {
+  position: relative;
+  width: 170px;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-}
-.scene-clocks.upper {
-  left: 36px;
-  top: 72px;
-}
-.scene-clocks.lower {
-  right: 36px;
-  bottom: 76px;
-}
-.scene-clocks.opened {
-  top: 58px;
-  bottom: 74px;
-  z-index: 11;
-  animation: action-rise 0.18s ease-out;
-}
-.scene-clocks > header {
-  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  flex: none;
-  border-bottom: 1px solid #cad1ba;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: #fff9e4;
+  text-align: center;
+  text-shadow:
+    0 1px 3px #16382a,
+    0 0 5px #16382a;
 }
-.scene-clocks > header strong {
-  margin-right: auto;
-  font-size: 13px;
+.battle-clock-face .clock-dial {
+  width: 132px;
+  height: 132px;
+  filter: drop-shadow(0 3px 4px #0a201b80);
 }
-.scene-clocks > header button {
-  padding: 4px 8px;
-}
-.scene-clock-list {
-  overflow: auto;
-  min-height: 0;
-  padding: 8px;
-  overscroll-behavior: contain;
-}
-.ornate-clock {
-  display: grid;
-  grid-template-columns: 112px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  min-height: 142px;
-  padding: 8px;
-  border: 1px solid #a1ad82;
-  border-radius: 5px;
-  background:
-    repeating-linear-gradient(
-      135deg,
-      #9cae7708 0px,
-      #9cae7708 2px,
-      transparent 2px,
-      transparent 8px
-    ),
-    radial-gradient(ellipse at 0 0, #d6e1bf, #fbfaed);
-  box-shadow: inset 0 0 0 3px #faf6e1;
-  position: relative;
-  margin-bottom: 6px;
-}
-.ornate-clock .clock-dial {
-  width: 112px;
-  height: 112px;
-  flex: none;
-}
-.ornate-clock p {
-  font-size: 12px;
-  line-height: 1.5;
-  margin: 5px 0;
-  color: #647352;
-}
-.ornate-clock b {
-  font-size: 13px;
-  color: #8b702e;
-}
-.ornate-clock .clock-title {
+.battle-clock-face .clock-name {
   font-weight: bold;
   font-size: 15px;
-  padding: 0;
-  border: 0;
+  line-height: 20px;
+  max-width: 100%;
+  color: inherit;
+  text-shadow: inherit;
+  padding: 2px 4px;
   background: none;
-  text-align: left;
-  color: #2a503b;
+  border: 0;
   overflow-wrap: anywhere;
 }
-.ornate-clock .clock-quick {
-  position: static;
+.battle-clock-face p {
+  max-width: 100%;
+  font-size: 12px;
+  line-height: 16px;
+  margin: 2px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.battle-clock-face .clock-quick {
+  top: 46px;
+  left: 0;
+  right: 0;
+  bottom: auto;
+  width: 100%;
+  transform: none;
+  display: flex;
+  justify-content: space-between;
+  opacity: 0;
+  pointer-events: none;
+}
+.battle-clock-face:hover .clock-quick,
+.battle-clock-face:focus-within .clock-quick {
   opacity: 1;
   pointer-events: auto;
+}
+.battle-clock-face .clock-quick button {
+  width: 28px;
+  height: 32px;
+  padding: 0;
+}
+.battle-clock-pages {
   display: flex;
-  gap: 8px;
-  margin-top: 6px;
-  transform: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 4px;
+  color: #fff9e4;
+  text-shadow: 0 1px 3px #16382a;
+}
+.battle-clock-pages button,
+.battle-clock-empty {
+  background: #fff9e7d9;
+  border: 0;
+}
+.battle-clock-pages button {
+  min-width: 32px;
+  min-height: 30px;
+  padding: 2px 8px;
+}
+@media (hover: none) {
+  .battle-clock-face .clock-quick {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+@media (max-height: 650px) {
+  .battle-clock-face .clock-dial {
+    width: 104px;
+    height: 104px;
+  }
+  .battle-clock-face .clock-quick {
+    top: 32px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle-clock-flyout,
+  .battle-clock-arrow svg {
+    transition: none;
+  }
 }
 .clock-directory-list .clock-dial {
   width: 78px;
@@ -700,4 +753,39 @@
 }
 .inventory-detail-heading button {
   padding: 5px 10px;
+}
+
+.entry-context-menu {
+  position: fixed;
+  z-index: 1000;
+  width: 224px;
+  background: #fffdf5;
+  color: #294c3e;
+  border: 1px solid #a3b499;
+  border-radius: 8px;
+  box-shadow: 0 8px 28px #132b3440;
+  padding: 6px;
+}
+.entry-context-menu strong {
+  display: block;
+  padding: 5px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.entry-context-menu button {
+  display: block;
+  text-align: left;
+  width: 100%;
+  border: 0;
+}
+.entry-more {
+  flex: none;
+  min-width: 32px;
+  padding: 4px 8px;
+}
+.delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }

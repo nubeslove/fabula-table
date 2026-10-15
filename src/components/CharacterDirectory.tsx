@@ -1,3 +1,4 @@
+import { useEntryDeleteMenu } from "./EntryDeleteMenu";
 import { useState } from "react";
 import type { Character, Command, Session } from "../shared/types";
 import { derived } from "../shared/rules";
@@ -23,6 +24,7 @@ export function CharacterDirectory({
   const [monsters, setMonsters] = useState(false);
   const [query, setQuery] = useState("");
   const gm = me.role === "gm";
+  const menu = useEntryDeleteMenu(act);
   const cast = world.scenes.find((s) => s.id === world.activeScene)?.cast ?? [];
   const group = world.characters.filter((c) => c.kind === kind);
   const search = query.trim().toLocaleLowerCase();
@@ -37,6 +39,7 @@ export function CharacterDirectory({
 
   return (
     <section className="bounded-panel character-directory">
+      {menu.view}
       <nav className="workspace-tabs" aria-label="人物分类">
         {Object.entries(categories).map(([value, label]) => (
           <button
@@ -94,10 +97,18 @@ export function CharacterDirectory({
               const onStage = cast.some((x) => x.actor === c.id);
               const stats = gm || c.kind === "pc" ? derived(c) : null;
               const owner = world.members.find((m) => m.id === c.owner);
+              const target = {
+                id: c.id,
+                name: c.name,
+                type: "character.delete" as const,
+                detail:
+                  "同时移除所有场景中的立绘、Token、预制台词以及战斗和探索名单。删除当前行动者后可重新选择行动者。",
+              };
               return (
                 <article
                   className={`character-entry ${onStage ? "on-stage" : ""}`}
                   key={c.id}
+                  {...menu.bind(target, gm || c.owner === me.id)}
                 >
                   <Portrait
                     name={c.name}
@@ -135,6 +146,7 @@ export function CharacterDirectory({
                     )}
                   </div>
                   <div className="character-entry-actions">
+                    {menu.button(target, gm || c.owner === me.id)}
                     {(gm || c.owner === me.id) && (
                       <button
                         aria-label={`编辑人物卡：${c.name}`}

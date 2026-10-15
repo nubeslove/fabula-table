@@ -1,3 +1,4 @@
+import { useEntryDeleteMenu } from "./EntryDeleteMenu";
 import { useEffect, useRef, useState } from "react";
 import type { Asset, Session, Command } from "../shared/types";
 import { api, apiUrl, bytes, copy } from "../lib/api";
@@ -31,6 +32,14 @@ export function Resources({
     [query, setQuery] = useState(""),
     [kind, setKind] = useState(""),
     [preview, setPreview] = useState<Asset | null>(null);
+  const menu = useEntryDeleteMenu(act);
+  const deletion = (a: Asset) => ({
+    id: a.id,
+    name: a.name,
+    type: "asset.delete" as const,
+    detail:
+      "从本世界移除素材，并清空使用它的场景背景、音乐、立绘或表情。人物与场景本身保留；其他世界使用的同一文件不受影响。",
+  });
   const input = useRef<HTMLInputElement>(null);
   const invite = shareUrl({ room: w.id }),
     preload = shareUrl({ preload: w.id, key: session.preloadKey ?? "" }),
@@ -67,6 +76,7 @@ export function Resources({
   }
   return (
     <section className="bounded-panel asset-manager">
+      {menu.view}
       <div className="workspace-tabs">
         <button
           className={tab === "files" ? "selected" : ""}
@@ -165,7 +175,12 @@ export function Resources({
           )}
           <div className="asset-list" aria-label="世界素材条目" tabIndex={0}>
             {shown.map((a) => (
-              <article className="asset-entry" key={a.id}>
+              <article
+                className="asset-entry"
+                key={a.id}
+                {...menu.bind(deletion(a), gm)}
+              >
+                {menu.button(deletion(a), gm)}
                 <button
                   className="asset-open"
                   title={`预览 ${a.name}`}

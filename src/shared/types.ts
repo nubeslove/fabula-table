@@ -211,6 +211,13 @@ export interface Session {
   preloadKey?: string;
 }
 export type Command =
+  | {
+      type: "battle.basic";
+      actor: string;
+      action: "攻击" | "防御" | "物品";
+      item?: string;
+    }
+  | { type: "asset.delete"; id: string }
   | { type: "battle.nextRound" }
   | { type: "character.save"; value: Character; expected: number | null }
   | { type: "character.delete"; id: string }

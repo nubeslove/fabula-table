@@ -12,6 +12,7 @@ import {
   characterProblems,
   derived,
   learnedAbilities,
+  newScene,
 } from "../src/shared/rules";
 import expansionResourceData from "../src/shared/expansion-resource-index.json";
 const expansionResources: Record<string, string> = expansionResourceData;
@@ -274,22 +275,29 @@ export function apply(w: World, me: Identity, input: unknown) {
       break;
     }
     case "character.delete": {
-      gm(me);
       const c = actor(w, me, v.id(a.id));
-      requireExplorationFinished(w, c.id);
-      v.insist(
-        !w.battle.active || !w.battle.roster.includes(c.id),
-        "请先结束冲突",
-      );
       w.characters = w.characters.filter((x) => x.id !== c.id);
+      w.battle.roster = w.battle.roster.filter((id) => id !== c.id);
+      w.battle.acted = w.battle.acted.filter((id) => id !== c.id);
+      if (w.battle.current === c.id) w.battle.current = "";
+      if (!w.battle.roster.length) w.battle.active = false;
       for (const s of w.scenes) {
         s.cast = s.cast.filter((x) => x.actor !== c.id);
         s.tokens = s.tokens.filter((x) => x.actor !== c.id);
         s.cues = s.cues.filter((x) => x.actor !== c.id);
+        s.cueIndex = Math.min(s.cueIndex, s.cues.length - 1);
+        if (s.exploration) {
+          s.exploration.order = s.exploration.order.filter((id) => id !== c.id);
+          delete s.exploration.spent[c.id];
+          if (s.exploration.current === c.id)
+            s.exploration.current = s.exploration.order[0] ?? "";
+          if (!s.exploration.order.length) s.exploration.active = false;
+        }
         s.revision++;
       }
       if (w.focus === c.id) w.focus = "";
       if (w.speech?.actor === c.id) w.speech = null;
+      addLog(w, me, "system", `删除了人物：${c.name}`, c);
       break;
     }
     case "resource": {
@@ -347,8 +355,63 @@ export function apply(w: World, me: Identity, input: unknown) {
     case "scene.delete": {
       gm(me);
       const id = v.id(a.id);
-      v.insist(id !== w.activeScene, "正在使用的场景不能删除");
+      const removed = w.scenes.find((s) => s.id === id);
+      v.insist(removed, "场景不存在");
       w.scenes = w.scenes.filter((s) => s.id !== id);
+      w.clocks = w.clocks.filter((c) => c.scene !== id);
+      if (id === w.activeScene) {
+        const replacement = newScene(randomUUID());
+        replacement.name = "空白舞台";
+        replacement.public = true;
+        w.scenes.push(replacement);
+        w.activeScene = replacement.id;
+        w.focus = "";
+        w.speech = null;
+        w.battle.active = false;
+        w.battle.current = "";
+        w.battle.roster = [];
+        w.battle.acted = [];
+      }
+      addLog(w, me, "system", `删除了场景：${removed.name}`, undefined, {
+        private: !removed.public,
+      });
+      break;
+    }
+    case "asset.delete": {
+      gm(me);
+      const id = v.id(a.id),
+        removed = w.assets.find((x) => x.id === id);
+      v.insist(removed, "世界素材不存在");
+      w.assets = w.assets.filter((x) => x.id !== id);
+      for (const c of w.characters) {
+        const expressions = new Set(
+          c.expressions.filter((e) => e.asset === id).map((e) => e.id),
+        );
+        if (c.portrait === id || expressions.size) {
+          if (c.portrait === id) c.portrait = "";
+          c.expressions = c.expressions.filter((e) => e.asset !== id);
+          c.revision++;
+          for (const s of w.scenes) {
+            let changed = false;
+            for (const x of [...s.cast, ...s.cues])
+              if (x.actor === c.id && expressions.has(x.expression)) {
+                x.expression = "";
+                changed = true;
+              }
+            if (changed) s.revision++;
+          }
+        }
+      }
+      for (const s of w.scenes)
+        if (s.background === id || s.audio === id) {
+          if (s.background === id) s.background = "";
+          if (s.audio === id) s.audio = "";
+          s.revision++;
+        }
+      // Content-addressed files may be shared by other worlds; revoke only this world's reference.
+      addLog(w, me, "system", `删除了世界素材：${removed.name}`, undefined, {
+        private: true,
+      });
       break;
     }
     case "token.move": {
@@ -516,6 +579,19 @@ export function apply(w: World, me: Identity, input: unknown) {
         me,
         "action",
         `使用「${ability.name}」\n${ability.text}\n消耗：${ability.cost}（另行掷骰与调整资源）`,
+        c,
+      );
+      break;
+    }
+    case "battle.basic": {
+      const c = actor(w, me, v.id(a.actor));
+      const action = v.one(a.action, ["攻击", "防御", "物品"] as const);
+      const item = a.item ? v.str(a.item, 100) : "";
+      addLog(
+        w,
+        me,
+        "action",
+        `声明「${action}」${item ? `：${item}` : ""}；掷骰、效果和资源由玩家与 GM 手动处理。`,
         c,
       );
       break;

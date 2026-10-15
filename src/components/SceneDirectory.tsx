@@ -1,3 +1,5 @@
+import { baseArtById } from "../shared/base-library";
+import { useEntryDeleteMenu } from "./EntryDeleteMenu";
 import { useState } from "react";
 import type { Command, Scene, World } from "../shared/types";
 import { newScene } from "../shared/rules";
@@ -21,6 +23,13 @@ export function SceneDirectory({
   opened: () => void;
   error: (text: string) => void;
 }) {
+  const menu = useEntryDeleteMenu(act);
+  const deletion = (s: Scene) => ({
+    id: s.id,
+    name: s.name,
+    type: "scene.delete" as const,
+    detail: `删除场景及其 Token、台词和关联的冲突命刻，人物卡与素材文件保留。${s.id === w.activeScene ? "当前场景删除后会结束冲突并回到空白舞台。" : ""}`,
+  });
   const [folder, setFolder] = useState("*"),
     [query, setQuery] = useState(""),
     [mode, setMode] = useState("");
@@ -43,6 +52,7 @@ export function SceneDirectory({
   ];
   return (
     <section className="bounded-panel scene-directory">
+      {menu.view}
       <div className="workspace-toolbar">
         <input
           aria-label="搜索场景"
@@ -112,12 +122,15 @@ export function SceneDirectory({
               <article
                 className={`scene-entry ${s.id === w.activeScene ? "current" : ""}`}
                 key={s.id}
+                {...menu.bind(deletion(s))}
               >
+                {menu.button(deletion(s))}
                 <div className={`scene-entry-thumb mode-${s.mode}`}>
                   {urls[s.background] &&
-                  w.assets
-                    .find((a) => a.id === s.background)
-                    ?.mime.startsWith("image/") ? (
+                  (baseArtById.has(s.background) ||
+                    w.assets
+                      .find((a) => a.id === s.background)
+                      ?.mime.startsWith("image/")) ? (
                     <img src={urls[s.background]} alt="" loading="lazy" />
                   ) : (
                     <span>

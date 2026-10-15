@@ -3,7 +3,8 @@ import type { CSSProperties } from "react";
 import type { Character, Command, Session } from "../shared/types";
 import { BattleClocks } from "./BattleClocks";
 import { derived } from "../shared/rules";
-import { BattleAction, type BattleActionKind } from "./BattleAction";
+import type { BattleActionKind } from "./BattleAction";
+import { BattleWorkbench as BattleAction } from "./BattleWorkbench";
 import { formation } from "../shared/formation";
 
 export function BattleStage({
@@ -126,15 +127,8 @@ export function BattleStage({
       />
       {(["upper", "lower"] as const).map((placement) => (
         <BattleClocks
-          collapsed={
-            !!action ||
-            width < 850 ||
-            height < 450 ||
-            roster.filter(
-              (c) => c.side === (placement === "upper" ? "foes" : "heroes"),
-            ).length > 4
-          }
-          key={placement}
+          width={width}
+          key={`${scene?.id}:${placement}`}
           clocks={w.clocks.filter((c) => c.scene === scene?.id)}
           placement={placement}
           gm={gm}
@@ -170,6 +164,18 @@ export function BattleStage({
           <button disabled={!canAct} onClick={() => setAction("abilities")}>
             能力
           </button>
+          {gm && (
+            <button
+              onClick={() =>
+                openClock(
+                  "new",
+                  selected?.side === "heroes" ? "lower" : "upper",
+                )
+              }
+            >
+              命刻
+            </button>
+          )}
           <button disabled={!canAct} onClick={() => setAction("roll")}>
             掷骰
           </button>
@@ -227,6 +233,7 @@ export function BattleStage({
         <BattleAction
           key={`${selected.id}:${action}`}
           character={selected}
+          portrait={urls[selected.portrait]}
           kind={action}
           gm={gm}
           act={act}

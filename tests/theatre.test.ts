@@ -189,3 +189,64 @@ test("旧世界默认为关闭；换场清除台词；编辑场景不能偷偷�
   assert.equal(w.activeScene, "next");
   assert.equal(next.theatre, undefined);
 });
+
+test("立绘走位使用增量并保存，受角色权限及活动场景限制，不改变探索移动", () => {
+  const w = fixture();
+  start(w);
+  const s = w.scenes[0];
+  s.tokens = [{ id: "t", actor: "pc", x: 30, y: 40, hidden: false }];
+  s.exploration = {
+    active: true,
+    round: 1,
+    order: ["pc"],
+    current: "pc",
+    spent: { pc: 2 },
+  };
+  const before = structuredClone({ tokens: s.tokens, turn: s.exploration }),
+    logs = w.logs.length;
+  const move = {
+    type: "theatre.move",
+    scene: s.id,
+    actor: "pc",
+    dx: 3,
+    dy: -3,
+  };
+  apply(w, player, move);
+  apply(w, player, move);
+  assert.deepEqual(s.cast[0].offset, { x: 6, y: -6 });
+  assert.deepEqual({ tokens: s.tokens, turn: s.exploration }, before);
+  assert.equal(w.logs.length, logs);
+  assert.throws(() => apply(w, player, { ...move, actor: "npc" }), /不能操作/);
+  assert.throws(() => apply(w, player, { ...move, scene: "other" }), /未开启/);
+  assert.throws(() => apply(w, player, { ...move, dx: 100 }));
+  for (let i = 0; i < 40; i++) apply(w, player, move);
+  assert.deepEqual(s.cast[0].offset, { x: 80, y: -40 });
+  assert.deepEqual(
+    project(JSON.parse(JSON.stringify(w)), player).scenes[0].cast[0].offset,
+    { x: 80, y: -40 },
+  );
+  apply(w, player, { ...move, dx: 0, dy: 0, reset: true });
+  assert.deepEqual(s.cast[0].offset, { x: 0, y: 0 });
+  s.theatre = false;
+  assert.throws(() => apply(w, player, move), /未开启/);
+});
+test("通用表情独立于立绘图，可重播和清除；不能指定任意脚本或控制他人", () => {
+  const w = fixture();
+  start(w);
+  const s = w.scenes[0],
+    cmd = { type: "theatre.emote", scene: s.id, actor: "pc", emote: "happy" };
+  s.cast[0].expression = "custom-face";
+  apply(w, player, cmd);
+  const first = s.cast[0].emoteId;
+  assert.equal(s.cast[0].emote, "happy");
+  assert.equal(s.cast[0].expression, "custom-face");
+  apply(w, player, cmd);
+  assert.notEqual(s.cast[0].emoteId, first);
+  assert.throws(() => apply(w, player, { ...cmd, actor: "npc" }), /不能操作/);
+  assert.throws(() => apply(w, player, { ...cmd, emote: "<script>" }));
+  const restored = project(JSON.parse(JSON.stringify(w)), player);
+  assert.equal(restored.scenes[0].cast[0].emote, "happy");
+  apply(w, player, { ...cmd, emote: "" });
+  assert.equal(s.cast[0].emote, "");
+  assert.equal(s.cast[0].expression, "custom-face");
+});

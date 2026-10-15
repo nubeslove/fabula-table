@@ -1,0 +1,238 @@
+import { useEffect, useRef, useState, type PointerEvent } from "react";
+import type { Command, Scene } from "../shared/types";
+import { EMOTE_NAMES, THEATRE_EMOTES } from "../shared/theatre";
+import { TheatreEmote } from "./TheatreEmote";
+
+export function TheatrePerformanceTools({
+  scene,
+  slot,
+  name,
+  act,
+}: {
+  scene: Scene;
+  slot: Scene["cast"][number];
+  name: string;
+  act: (c: Command) => Promise<boolean>;
+}) {
+  const [open, setOpen] = useState<"move" | "emote" | null>(null);
+  const root = useRef<HTMLDivElement>(null),
+    moving = useRef(false),
+    held = useRef<ReturnType<typeof setInterval>>(),
+    lastKey = useRef(0);
+  const [busy, setBusy] = useState(false);
+  const move = async (dx: number, dy: number, reset = false) => {
+    if (moving.current) return;
+    moving.current = true;
+    try {
+      await act({
+        type: "theatre.move",
+        scene: scene.id,
+        actor: slot.actor,
+        dx,
+        dy,
+        reset,
+      });
+    } finally {
+      moving.current = false;
+    }
+  };
+  const stop = () => {
+    clearInterval(held.current);
+    held.current = undefined;
+  };
+  function hold(e: PointerEvent<HTMLButtonElement>, dx: number, dy: number) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    stop();
+    void move(dx, dy);
+    held.current = setInterval(() => void move(dx, dy), 150);
+  }
+  useEffect(() => {
+    function key(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(null);
+        stop();
+        return;
+      }
+      if (
+        !e.altKey ||
+        e.ctrlKey ||
+        e.metaKey ||
+        /INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement).tagName) ||
+        (e.target as HTMLElement).isContentEditable ||
+        document.querySelector(
+          "dialog[open],.table-drawer,.battle-workbench",
+        ) ||
+        !root.current?.getClientRects().length
+      )
+        return;
+      const vectors: Record<string, [number, number]> = {
+        ArrowLeft: [-1, 0],
+        ArrowRight: [1, 0],
+        ArrowUp: [0, -1],
+        ArrowDown: [0, 1],
+      };
+      const vector = vectors[e.key];
+      if (!vector && e.key !== "Home") return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.timeStamp - lastKey.current < 125 && e.repeat) return;
+      lastKey.current = e.timeStamp;
+      const step = e.shiftKey ? 1 : 3;
+      void move(
+        (vector?.[0] ?? 0) * step,
+        (vector?.[1] ?? 0) * step,
+        e.key === "Home",
+      );
+    }
+    function outside(e: globalThis.PointerEvent) {
+      if (!root.current?.contains(e.target as Node)) setOpen(null);
+    }
+    window.addEventListener("keydown", key, true);
+    window.addEventListener("blur", stop);
+    window.addEventListener("pointerdown", outside);
+    return () => {
+      stop();
+      window.removeEventListener("keydown", key, true);
+      window.removeEventListener("blur", stop);
+      window.removeEventListener("pointerdown", outside);
+    };
+  }, [scene.id, slot.actor]);
+  async function emote(value: (typeof THEATRE_EMOTES)[number] | "") {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await act({
+        type: "theatre.emote",
+        scene: scene.id,
+        actor: slot.actor,
+        emote: value,
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="theatre-performance-tools" ref={root}>
+      <button
+        aria-expanded={open === "move"}
+        onClick={() => setOpen(open === "move" ? null : "move")}
+        title="Alt+方向键走位；Shift 细调；Alt+Home 归位"
+      >
+        走位
+      </button>
+      <button
+        aria-expanded={open === "emote"}
+        onClick={() => setOpen(open === "emote" ? null : "emote")}
+      >
+        通用表情
+      </button>
+      {open && (
+        <section
+          className="theatre-tool-popover"
+          aria-label={open === "move" ? "立绘走位" : "通用表情选择"}
+        >
+          <header>
+            <strong>
+              {name} · {open === "move" ? "走位" : "表情"}
+            </strong>
+            <button
+              aria-label="收起演出工具"
+              onClick={() => {
+                setOpen(null);
+                stop();
+              }}
+            >
+              ×
+            </button>
+          </header>
+          {open === "move" ? (
+            <>
+              <div className="theatre-direction-pad">
+                {(
+                  [
+                    { label: "上移立绘", text: "↑", dx: 0, dy: -3, key: "up" },
+                    {
+                      label: "左移立绘",
+                      text: "←",
+                      dx: -3,
+                      dy: 0,
+                      key: "left",
+                    },
+                    {
+                      label: "右移立绘",
+                      text: "→",
+                      dx: 3,
+                      dy: 0,
+                      key: "right",
+                    },
+                    { label: "下移立绘", text: "↓", dx: 0, dy: 3, key: "down" },
+                  ] as const
+                ).map((d) => (
+                  <button
+                    key={d.key}
+                    className={d.key}
+                    aria-label={d.label}
+                    onPointerDown={(e) => hold(e, d.dx, d.dy)}
+                    onPointerUp={stop}
+                    onPointerCancel={stop}
+                    onLostPointerCapture={stop}
+                    onClick={(e) => {
+                      if (e.detail === 0) void move(d.dx, d.dy);
+                    }}
+                  >
+                    {d.text}
+                  </button>
+                ))}
+                <button
+                  className="reset"
+                  onClick={() => void move(0, 0, true)}
+                  title="Alt+Home"
+                >
+                  归位
+                </button>
+              </div>
+              <small className="theatre-offset">
+                水平 {slot.offset?.x ?? 0} · 垂直 {slot.offset?.y ?? 0}
+              </small>
+              <p>
+                按住方向按钮连续走位。
+                <br />
+                Alt + 方向键移动，另按 Shift 细调。
+                <br />
+                只移动演出立绘，不消耗地图移动格数。
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="theatre-emote-picker">
+                {THEATRE_EMOTES.map((e) => (
+                  <button
+                    key={e}
+                    aria-label={`通用表情：${EMOTE_NAMES[e]}`}
+                    aria-pressed={slot.emote === e}
+                    disabled={busy}
+                    onClick={() => void emote(e)}
+                  >
+                    <TheatreEmote emote={e} />
+                    <span>{EMOTE_NAMES[e]}</span>
+                  </button>
+                ))}
+              </div>
+              <footer>
+                <small>再次点选可重播 · 全团可见</small>
+                <button
+                  disabled={busy || !slot.emote}
+                  onClick={() => void emote("")}
+                >
+                  清除表情
+                </button>
+              </footer>
+            </>
+          )}
+        </section>
+      )}
+    </div>
+  );
+}

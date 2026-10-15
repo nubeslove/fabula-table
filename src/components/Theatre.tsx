@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Command, Scene, Session } from "../shared/types";
 import { Portrait } from "./Common";
+import { TheatrePortrait } from "./TheatrePortrait";
+import { TheatrePerformanceTools } from "./TheatrePerformanceTools";
 import { useTheatreSpeaker } from "./TheatreContext";
 import "../styles/theatre.css";
 
@@ -28,6 +30,8 @@ export function Theatre({
     [busy, setBusy] = useState(false);
   const gm = me.role === "gm";
   const frame = useRef<HTMLElement>(null);
+  const portraits = useRef<HTMLDivElement>(null);
+  const [area, setArea] = useState({ width: 1000, height: 250 });
   const [capacity, setCapacity] = useState(6),
     [page, setPage] = useState(0);
   const [clearance, setClearance] = useState(64);
@@ -52,9 +56,15 @@ export function Theatre({
     const observer = new ResizeObserver(() => {
       const width = frame.current?.clientWidth ?? 1000;
       setCapacity(width < 450 ? 2 : width < 700 ? 3 : 6);
+      if (portraits.current)
+        setArea({
+          width: portraits.current.clientWidth,
+          height: portraits.current.clientHeight,
+        });
       setClearance(hud ? Math.ceil(hud.getBoundingClientRect().height) : 0);
     });
     observer.observe(frame.current);
+    if (portraits.current) observer.observe(portraits.current);
     if (hud) observer.observe(hud);
     return () => observer.disconnect();
   }, [scene.theatre, hidden, battle, scene.mode]);
@@ -115,6 +125,7 @@ export function Theatre({
           aria-label="小剧场演出"
         >
           <div
+            ref={portraits}
             className="theatre-portraits"
             style={{
               gridTemplateColumns: visibleCast
@@ -122,41 +133,33 @@ export function Theatre({
                 .join(" "),
             }}
           >
-            {visibleCast.map(({ slot, c }) => {
-              const active = world.focus === c.id,
-                owned = gm || c.owner === me.id;
+            {visibleCast.map(({ slot, c }, index) => {
+              const weights = visibleCast.map(({ c }) =>
+                world.focus === c.id ? 1.35 : 1,
+              );
+              const unit =
+                (area.width * 0.92 - 8 * Math.max(0, visibleCast.length - 1)) /
+                weights.reduce((n, w) => n + w, 0);
+              const left =
+                area.width * 0.04 +
+                weights.slice(0, index).reduce((n, w) => n + w, 0) * unit +
+                index * 8;
               return (
-                <div
+                <TheatrePortrait
                   key={c.id}
-                  className={`theatre-actor ${active ? "is-speaking" : world.focus ? "is-listening" : ""}`}
-                  style={{ "--actor-color": c.color } as CSSProperties}
-                >
-                  <div
-                    className="theatre-art"
-                    style={{
-                      transform: slot.mirrored ? "scaleX(-1)" : undefined,
-                    }}
-                  >
-                    <Portrait
-                      name={c.name}
-                      color={c.color}
-                      src={
-                        urls[
-                          c.expressions.find((e) => e.id === slot.expression)
-                            ?.asset || c.portrait
-                        ]
-                      }
-                    />
-                  </div>
-                  <button
-                    className="theatre-name"
-                    disabled={!owned || busy}
-                    onClick={() => select(c.id)}
-                    title={owned ? `切换发言：${c.name}` : c.name}
-                  >
-                    <span>{active ? "◆" : "◇"}</span> {c.name}
-                  </button>
-                </div>
+                  slot={slot}
+                  character={c}
+                  urls={urls}
+                  active={world.focus === c.id}
+                  listening={!!world.focus}
+                  owned={gm || c.owner === me.id}
+                  busy={busy}
+                  select={() => select(c.id)}
+                  stageWidth={area.width}
+                  areaHeight={area.height}
+                  left={left}
+                  width={unit * weights[index]}
+                />
               );
             })}
           </div>
@@ -232,6 +235,13 @@ export function Theatre({
                 )}
                 {selected && (
                   <>
+                    <TheatrePerformanceTools
+                      key={scene.id + selected.c.id}
+                      scene={scene}
+                      slot={selected.slot}
+                      name={selected.c.name}
+                      act={act}
+                    />
                     <select
                       aria-label="演出表情"
                       disabled={busy}

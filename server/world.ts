@@ -17,6 +17,7 @@ import {
 import expansionResourceData from "../src/shared/expansion-resource-index.json";
 const expansionResources: Record<string, string> = expansionResourceData;
 import * as v from "./validation";
+import { THEATRE_EMOTES, moveTheatreOffset } from "../src/shared/theatre";
 import { updateJournal } from "./journal";
 import {
   moveOnGrid,
@@ -500,6 +501,27 @@ export function apply(w: World, me: Identity, input: unknown) {
       const slot = s.cast.find((x) => x.actor === c.id);
       v.insist(slot && c.public, "角色尚未登台");
       slot.mirrored = v.bool(a.mirrored);
+      s.revision++;
+      break;
+    }
+    case "theatre.move":
+    case "theatre.emote": {
+      const s = current(w),
+        c = actor(w, me, v.id(a.actor));
+      v.insist(s.id === v.id(a.scene) && s.theatre, "当前场景的小剧场未开启");
+      const slot = s.cast.find((x) => x.actor === c.id);
+      v.insist(slot && c.public, "角色尚未登台");
+      if (type === "theatre.move") {
+        const dx = v.num(a.dx, -5, 5),
+          dy = v.num(a.dy, -5, 5);
+        slot.offset =
+          a.reset === undefined || !v.bool(a.reset)
+            ? moveTheatreOffset(slot.offset, dx, dy)
+            : { x: 0, y: 0 };
+      } else {
+        slot.emote = v.one(a.emote, ["", ...THEATRE_EMOTES] as const);
+        slot.emoteId = randomUUID();
+      }
       s.revision++;
       break;
     }

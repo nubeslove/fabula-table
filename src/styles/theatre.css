@@ -31,6 +31,7 @@
   flex: 1;
   min-height: 0;
   display: grid;
+  grid-template-rows: minmax(0, 1fr);
   align-items: end;
   padding: 0 4%;
   gap: 8px;
@@ -39,10 +40,22 @@
   align-self: center;
   transition: grid-template-columns 0.3s ease;
 }
+.theatre-cell {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+.theatre-position {
+  position: absolute;
+  inset: 0 0 20%;
+  transition: transform 0.16s linear;
+}
 .theatre-actor {
   position: relative;
   height: 100%;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -55,11 +68,20 @@
   animation: theatre-enter 0.35s ease-out both;
 }
 .theatre-art {
-  height: calc(100% - 28px);
+  flex: 1;
+  min-height: 0;
+  position: relative;
   width: 100%;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+}
+.theatre-image {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
 }
 .theatre-art .portrait {
   width: 100%;
@@ -87,13 +109,14 @@
 }
 .theatre-actor.is-listening {
   filter: brightness(0.6) saturate(0.65);
-  transform: translateY(6px) scale(0.91);
+  transform: scale(0.91);
 }
 .theatre-actor.is-speaking {
   z-index: 2;
   filter: drop-shadow(0 0 8px #ece6bd25);
 }
 .game-table button.theatre-name {
+  flex: 0 0 28px;
   pointer-events: auto;
   max-width: 100%;
   border: none;
@@ -119,6 +142,8 @@
   cursor: default;
 }
 .theatre-dialogue-shell {
+  position: relative;
+  z-index: 4;
   flex: none;
   pointer-events: auto;
   color: #fbf9e9;
@@ -181,6 +206,7 @@
   color: #a9bdae;
 }
 .theatre-controls {
+  position: relative;
   min-height: 42px;
   display: flex;
   align-items: center;
@@ -473,4 +499,158 @@
 
 .map-stage .theatre-peek {
   top: 48px;
+}
+/* Performance tools share the same stage-relative anchor, even on narrow screens. */
+.theatre-performance-tools {
+  display: flex;
+  gap: 4px;
+}
+.theatre-tool-popover {
+  position: absolute;
+  right: 10px;
+  bottom: calc(100% + 8px);
+  width: min(320px, calc(100% - 20px));
+  padding: 12px;
+  background: #fafbef;
+  color: #2b4a3c;
+  border: 1px solid #a9b797;
+  border-radius: 8px;
+  box-shadow: 0 5px 24px #102e2a45;
+  z-index: 8;
+}
+.theatre-tool-popover > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid #d8dfca;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+.theatre-tool-popover > header strong {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.theatre-tool-popover p {
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 10px 0 0;
+  color: #617560;
+}
+.theatre-direction-pad {
+  display: grid;
+  grid-template: repeat(3, 36px) / repeat(3, 46px);
+  justify-content: center;
+  gap: 4px;
+}
+.game-table .theatre-direction-pad button {
+  font-size: 19px;
+  min-height: 36px;
+  touch-action: none;
+  user-select: none;
+}
+.theatre-direction-pad .up {
+  grid-area: 1/2;
+}
+.theatre-direction-pad .left {
+  grid-area: 2/1;
+}
+.theatre-direction-pad .right {
+  grid-area: 2/3;
+}
+.theatre-direction-pad .down {
+  grid-area: 3/2;
+}
+.game-table .theatre-direction-pad .reset {
+  grid-area: 2/2;
+  font-size: 12px;
+}
+.theatre-offset {
+  display: block;
+  text-align: center;
+  margin-top: 8px;
+  color: #688169;
+}
+.theatre-emote-picker {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+}
+.game-table .theatre-emote-picker button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 2px;
+}
+.game-table .theatre-emote-picker button[aria-pressed="true"] {
+  border-color: #71936b;
+  background: #e1ecd3;
+}
+.theatre-emote-picker .theatre-emote-symbol {
+  width: 38px;
+  height: 38px;
+}
+.theatre-tool-popover footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  gap: 5px;
+}
+.theatre-tool-popover footer small {
+  font-size: 11px;
+  color: #718169;
+}
+.theatre-emote {
+  position: absolute;
+  right: 4%;
+  top: 4%;
+  width: clamp(42px, 5vw, 68px);
+  aspect-ratio: 1;
+  filter: drop-shadow(0 3px 3px #16363045);
+  animation: emote-pop 0.4s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+  pointer-events: none;
+  z-index: 3;
+}
+.theatre-emote-symbol {
+  width: 100%;
+  height: 100%;
+  color: #b19b43;
+  overflow: visible;
+}
+.theatre-emote-symbol .emote-cloud {
+  fill: #fffdef;
+  stroke: #bdc6a4;
+  stroke-width: 1.5;
+}
+.theatre-emote-symbol.emote-angry {
+  color: #bd5550;
+}
+.theatre-emote-symbol.emote-sad,
+.theatre-emote-symbol.emote-nervous {
+  color: #5188a4;
+}
+.theatre-emote-symbol.emote-heart {
+  color: #c96c80;
+}
+.theatre-emote-symbol.emote-music,
+.theatre-emote-symbol.emote-happy {
+  color: #8a9c4d;
+}
+.theatre-emote-symbol.emote-thinking,
+.theatre-emote-symbol.emote-sleepy {
+  color: #7976a3;
+}
+@keyframes emote-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.6) rotate(-10deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }

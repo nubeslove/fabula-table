@@ -1,6 +1,7 @@
 import type { Character, Scene, Clock } from "../src/shared/types";
 import { EQUIPMENT, STATUS } from "../src/shared/rules";
 import { DEFAULT_GRID } from "../src/shared/exploration";
+import { THEATRE_EMOTES } from "../src/shared/theatre";
 export class UserError extends Error {
   constructor(
     message: string,
@@ -271,6 +272,18 @@ export function scene(v: unknown): Scene {
         expression: asset(c.expression),
         position: int(c.position, 0, 5),
         mirrored: c.mirrored === undefined ? false : bool(c.mirrored),
+        offset:
+          c.offset === undefined
+            ? undefined
+            : {
+                x: num(obj(c.offset).x, -80, 80),
+                y: num(obj(c.offset).y, -40, 20),
+              },
+        emote:
+          c.emote === undefined
+            ? undefined
+            : one(c.emote, ["", ...THEATRE_EMOTES] as const),
+        emoteId: c.emoteId === undefined ? undefined : str(c.emoteId, 80),
       };
     },
     6,

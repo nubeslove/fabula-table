@@ -681,6 +681,13 @@ body[data-preview="world"] .fantasy-lobby {
   font-size: 10px;
 }
 /* I — a vine-bound journal, quiet paper and botanical silhouettes. */
+body[data-theme] .sheet > .fantasy-edges {
+  background-size: 28px 28px;
+  opacity: 0.72;
+}
+body[data-theme] .utility > .fantasy-edges {
+  background-size: 32px 32px;
+}
 [data-theme="manuscript"] .lobby-hero {
   border-radius: 7px 2px 7px 2px;
 }

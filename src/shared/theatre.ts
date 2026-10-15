@@ -36,6 +36,16 @@ export const THEATRE_ACTIONS = {
   sleepy: { name: "瞌睡", emote: "sleepy", ms: 1300, hint: "慢慢点头打瞌睡" },
 } as const;
 export type TheatreAction = keyof typeof THEATRE_ACTIONS;
+/** Both timestamps come from the server; a player's clock is not authoritative. */
+export function newTheatreAction<T extends { id: string; at: number }>(
+  seen: string | undefined,
+  action: T | undefined,
+  serverTime: number | undefined,
+): T | undefined {
+  if (!action || action.id === seen) return undefined;
+  const age = (serverTime ?? action.at) - action.at;
+  return age >= 0 && age < 5000 ? action : undefined;
+}
 export const THEATRE_ACTION_IDS = Object.keys(
   THEATRE_ACTIONS,
 ) as TheatreAction[];
@@ -70,14 +80,14 @@ export function theatreLayout<
       (a, b) =>
         (b.dockOrder ?? 0) - (a.dockOrder ?? 0) || a.position - b.position,
     );
-    const budget = Math.max(0, width - 20) * (both ? 0.45 : 0.78);
+    const budget = Math.max(0, width - 48) * (both ? 0.45 : 0.78);
     const cardWidth = Math.min(
       240,
       height * 0.94,
       budget / (1 + Math.max(0, count - 1) * 0.82),
     );
     group.forEach((s, i) => {
-      const edge = 10 + i * cardWidth * 0.82;
+      const edge = 24 + i * cardWidth * 0.82;
       result[s.actor] = {
         left: side === "left" ? edge : width - edge - cardWidth,
         width: cardWidth,

@@ -36,11 +36,12 @@ export function Stage({
   const [setup, setSetup] = useState(false),
     [sound, setSound] = useState(false);
   const audio = useRef<HTMLAudioElement>(null);
-  const [reduce, setReduce] = useState(
-    () =>
-      localStorage.getItem("fu-reduce-motion") === "1" ||
-      matchMedia("(prefers-reduced-motion: reduce)").matches,
-  );
+  const [reduce, setReduce] = useState(() => {
+    const saved = localStorage.getItem("fu-reduce-motion");
+    return saved === null
+      ? matchMedia("(prefers-reduced-motion: reduce)").matches
+      : saved === "1";
+  });
   useEffect(() => {
     if (sound && audio.current)
       void audio.current.play().catch(() => setSound(false));

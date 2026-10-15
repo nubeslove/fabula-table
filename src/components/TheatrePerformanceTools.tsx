@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { createPortal } from "react-dom";
 import type { Command, Scene } from "../shared/types";
 import {
   EMOTE_NAMES,
@@ -16,14 +17,21 @@ export function TheatrePerformanceTools({
   slot,
   name,
   act,
+  host,
+  reduced,
+  enableMotion,
 }: {
   scene: Scene;
   slot: Scene["cast"][number];
   name: string;
   act: (c: Command) => Promise<boolean>;
+  host: HTMLElement | null;
+  reduced: boolean;
+  enableMotion: () => void;
 }) {
   const [open, setOpen] = useState<"move" | "emote" | "action" | null>(null);
   const root = useRef<HTMLDivElement>(null),
+    panel = useRef<HTMLElement>(null),
     moving = useRef(false),
     held = useRef<ReturnType<typeof setInterval>>(),
     lastKey = useRef(0);
@@ -127,7 +135,11 @@ export function TheatrePerformanceTools({
       );
     }
     function outside(e: globalThis.PointerEvent) {
-      if (!root.current?.contains(e.target as Node)) setOpen(null);
+      if (
+        !root.current?.contains(e.target as Node) &&
+        !panel.current?.contains(e.target as Node)
+      )
+        setOpen(null);
     }
     window.addEventListener("keydown", key, true);
     window.addEventListener("blur", stop);
@@ -174,166 +186,196 @@ export function TheatrePerformanceTools({
       >
         通用表情
       </button>
-      {open && (
-        <section
-          className="theatre-tool-popover"
-          aria-label={
-            open === "move"
-              ? "立绘走位"
-              : open === "action"
-                ? "预制动作选择"
-                : "通用表情选择"
-          }
-        >
-          <header>
-            <strong>
-              {name} ·{" "}
-              {open === "move" ? "走位" : open === "action" ? "动作" : "表情"}
-            </strong>
-            <button
-              aria-label="收起演出工具"
-              onClick={() => {
-                setOpen(null);
-                stop();
-              }}
-            >
-              ×
-            </button>
-          </header>
-          {open === "move" ? (
-            <>
-              <div className="theatre-dock-buttons">
-                <button
-                  aria-pressed={theatreSide(slot) === "left"}
-                  onClick={() => void dock("left")}
-                >
-                  ⇤ 到最左边
-                </button>
-                <button
-                  aria-pressed={theatreSide(slot) === "right"}
-                  onClick={() => void dock("right")}
-                >
-                  到最右边 ⇥
-                </button>
-              </div>
-              <small className="theatre-offset">站位细调</small>
-              <div className="theatre-direction-pad">
-                {(
-                  [
-                    { label: "上移立绘", text: "↑", dx: 0, dy: -1, key: "up" },
-                    {
-                      label: "左移立绘",
-                      text: "←",
-                      dx: -1,
-                      dy: 0,
-                      key: "left",
-                    },
-                    {
-                      label: "右移立绘",
-                      text: "→",
-                      dx: 1,
-                      dy: 0,
-                      key: "right",
-                    },
-                    { label: "下移立绘", text: "↓", dx: 0, dy: 1, key: "down" },
-                  ] as const
-                ).map((d) => (
-                  <button
-                    key={d.key}
-                    className={d.key}
-                    aria-label={d.label}
-                    onPointerDown={(e) => hold(e, d.dx, d.dy)}
-                    onPointerUp={stop}
-                    onPointerCancel={stop}
-                    onLostPointerCapture={stop}
-                    onClick={(e) => {
-                      if (e.detail === 0) void move(d.dx, d.dy);
-                    }}
-                  >
-                    {d.text}
-                  </button>
-                ))}
-                <button
-                  className="reset"
-                  onClick={() => void move(0, 0, true)}
-                  title="Alt+Home"
-                >
-                  归位
-                </button>
-              </div>
-              <small className="theatre-offset">
-                水平 {slot.offset?.x ?? 0} · 垂直 {slot.offset?.y ?? 0}
+      {open &&
+        host &&
+        createPortal(
+          <section
+            ref={panel}
+            className={`theatre-tool-panel theatre-tool-${open}`}
+            aria-label={
+              open === "move"
+                ? "立绘走位"
+                : open === "action"
+                  ? "预制动作选择"
+                  : "通用表情选择"
+            }
+          >
+            <header>
+              <strong>
+                {name} ·{" "}
+                {open === "move" ? "走位" : open === "action" ? "动作" : "表情"}
+              </strong>
+              <small>
+                {open === "move" ? "演出走位" : "点击重播 · 全团可见"}
               </small>
-              <p>
-                Alt + 左右键，快速滑到台词框两端。
-                <br />
-                Shift + Alt + 方向键细调；归位贴齐下缘。
-                <br />
-                只移动演出立绘，不消耗地图移动格数。
-              </p>
-            </>
-          ) : open === "action" ? (
-            <>
-              <div className="theatre-action-picker">
-                {THEATRE_ACTION_IDS.map((id) => {
-                  const action = THEATRE_ACTIONS[id];
-                  return (
-                    <button
-                      key={id}
-                      disabled={busy}
-                      aria-label={`演出动作：${action.name}`}
-                      title={action.hint}
-                      onClick={() => void perform(id)}
-                    >
-                      {action.emote ? (
-                        <TheatreEmote emote={action.emote} />
-                      ) : (
-                        <span className="theatre-bow-icon" aria-hidden="true">
-                          ↘
-                        </span>
-                      )}
-                      <strong>{action.name}</strong>
-                      <small>{action.hint}</small>
-                    </button>
-                  );
-                })}
-              </div>
-              <footer>
-                <small>动作与表情一起播放 · 点击重播</small>
+              {open === "action" && (
                 <button disabled={busy} onClick={() => void perform("")}>
                   停稳
                 </button>
-              </footer>
-            </>
-          ) : (
-            <>
-              <div className="theatre-emote-picker">
-                {THEATRE_EMOTES.map((e) => (
-                  <button
-                    key={e}
-                    aria-label={`通用表情：${EMOTE_NAMES[e]}`}
-                    aria-pressed={slot.emote === e}
-                    disabled={busy}
-                    onClick={() => void emote(e)}
-                  >
-                    <TheatreEmote emote={e} />
-                    <span>{EMOTE_NAMES[e]}</span>
-                  </button>
-                ))}
-              </div>
-              <footer>
-                <small>再次点选可重播 · 全团可见</small>
+              )}
+              {open === "emote" && (
                 <button
                   disabled={busy || !slot.emote}
                   onClick={() => void emote("")}
                 >
                   清除表情
                 </button>
-              </footer>
-            </>
-          )}
-        </section>
-      )}
+              )}
+              <button
+                aria-label="收起演出工具"
+                onClick={() => {
+                  setOpen(null);
+                  stop();
+                }}
+              >
+                ×
+              </button>
+            </header>
+            {open === "action" && reduced && (
+              <div className="theatre-motion-notice" role="status">
+                本机动态已关闭，当前只显示表情。
+                <button onClick={enableMotion}>开启立绘动作</button>
+              </div>
+            )}
+            <div className="theatre-tool-content">
+              {open === "move" ? (
+                <div className="theatre-move-layout">
+                  <div>
+                    <div className="theatre-dock-buttons">
+                      <button
+                        aria-pressed={theatreSide(slot) === "left"}
+                        onClick={() => void dock("left")}
+                      >
+                        ⇤ 到最左边
+                      </button>
+                      <button
+                        aria-pressed={theatreSide(slot) === "right"}
+                        onClick={() => void dock("right")}
+                      >
+                        到最右边 ⇥
+                      </button>
+                    </div>
+                    <p>
+                      Alt + 左右键快速换边
+                      <br />
+                      Shift + Alt + 方向键细调
+                    </p>
+                  </div>
+                  <div>
+                    <small className="theatre-offset">站位细调</small>
+                    <div className="theatre-direction-pad">
+                      {(
+                        [
+                          {
+                            label: "上移立绘",
+                            text: "↑",
+                            dx: 0,
+                            dy: -1,
+                            key: "up",
+                          },
+                          {
+                            label: "左移立绘",
+                            text: "←",
+                            dx: -1,
+                            dy: 0,
+                            key: "left",
+                          },
+                          {
+                            label: "右移立绘",
+                            text: "→",
+                            dx: 1,
+                            dy: 0,
+                            key: "right",
+                          },
+                          {
+                            label: "下移立绘",
+                            text: "↓",
+                            dx: 0,
+                            dy: 1,
+                            key: "down",
+                          },
+                        ] as const
+                      ).map((d) => (
+                        <button
+                          key={d.key}
+                          className={d.key}
+                          aria-label={d.label}
+                          onPointerDown={(e) => hold(e, d.dx, d.dy)}
+                          onPointerUp={stop}
+                          onPointerCancel={stop}
+                          onLostPointerCapture={stop}
+                          onClick={(e) => {
+                            if (e.detail === 0) void move(d.dx, d.dy);
+                          }}
+                        >
+                          {d.text}
+                        </button>
+                      ))}
+                      <button
+                        className="reset"
+                        onClick={() => void move(0, 0, true)}
+                        title="Alt+Home"
+                      >
+                        归位
+                      </button>
+                    </div>
+                    <small className="theatre-offset">
+                      水平 {slot.offset?.x ?? 0} · 垂直 {slot.offset?.y ?? 0}
+                    </small>
+                  </div>
+                </div>
+              ) : open === "action" ? (
+                <>
+                  <div className="theatre-action-picker">
+                    {THEATRE_ACTION_IDS.map((id) => {
+                      const action = THEATRE_ACTIONS[id];
+                      return (
+                        <button
+                          key={id}
+                          disabled={busy}
+                          aria-label={`演出动作：${action.name}`}
+                          title={action.hint}
+                          onClick={() => void perform(id)}
+                        >
+                          {action.emote ? (
+                            <TheatreEmote emote={action.emote} />
+                          ) : (
+                            <span
+                              className="theatre-bow-icon"
+                              aria-hidden="true"
+                            >
+                              ↘
+                            </span>
+                          )}
+                          <strong>{action.name}</strong>
+                          <small>{action.hint}</small>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="theatre-emote-picker">
+                    {THEATRE_EMOTES.map((e) => (
+                      <button
+                        key={e}
+                        aria-label={`通用表情：${EMOTE_NAMES[e]}`}
+                        aria-pressed={slot.emote === e}
+                        disabled={busy}
+                        onClick={() => void emote(e)}
+                      >
+                        <TheatreEmote emote={e} />
+                        <span>{EMOTE_NAMES[e]}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </section>,
+          host,
+        )}
     </div>
   );
 }

@@ -137,6 +137,7 @@ function snapshot(
 ): Session {
   return {
     world: project(room.world, me),
+    serverTime: Date.now(),
     me,
     accountLinked: !!room.users.find((u) => u.id === me.id)?.accountId,
     ...(me.role === "gm" ? { preloadKey: room.preloadKey } : {}),

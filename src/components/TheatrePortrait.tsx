@@ -1,6 +1,6 @@
 import type { Character, Scene } from "../shared/types";
 import { useEffect, useRef, useState } from "react";
-import { THEATRE_ACTIONS } from "../shared/theatre";
+import { THEATRE_ACTIONS, newTheatreAction } from "../shared/theatre";
 import { Portrait } from "./Common";
 import { TheatreEmote } from "./TheatreEmote";
 
@@ -19,6 +19,7 @@ export function TheatrePortrait({
   width,
   height,
   layer,
+  serverTime,
 }: {
   slot: Scene["cast"][number];
   character: Character;
@@ -34,10 +35,11 @@ export function TheatrePortrait({
   width: number;
   height: number;
   layer: number;
+  serverTime?: number;
 }) {
   const x = Math.max(
-    4,
-    Math.min(stageWidth - width - 4, left + (slot.offset?.x ?? 0) * 0.4),
+    24,
+    Math.min(stageWidth - width - 24, left + (slot.offset?.x ?? 0) * 0.4),
   );
   const y =
     (Math.max(-10, Math.min(0, slot.offset?.y ?? 0)) * areaHeight) / 100;
@@ -45,12 +47,9 @@ export function TheatrePortrait({
   const [playing, setPlaying] = useState<Scene["cast"][number]["action"]>();
   useEffect(() => {
     if (seen.current === slot.action?.id) return;
+    const next = newTheatreAction(seen.current, slot.action, serverTime);
     seen.current = slot.action?.id;
     // Restored snapshots stay still; only a newly received action plays.
-    const next =
-      slot.action && Math.abs(Date.now() - slot.action.at) < 5000
-        ? slot.action
-        : undefined;
     setPlaying(next);
     if (next) {
       const timer = setTimeout(

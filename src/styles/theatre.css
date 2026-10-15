@@ -14,6 +14,7 @@
   white-space: nowrap;
 }
 .theatre-overlay {
+  container-type: inline-size;
   position: absolute;
   z-index: 12;
   inset: auto 0 0;
@@ -27,8 +28,25 @@
   bottom: 64px;
   height: min(460px, 72%);
 }
-.theatre-overlay:has(.theatre-tool-popover) {
-  z-index: 25;
+.stage .theatre-overlay:has(.theatre-tool-panel) {
+  height: calc(100% - var(--theatre-clearance, 0px) - 8px);
+}
+.theatre-overlay:has(.theatre-tool-panel) .theatre-line {
+  height: 82px;
+  padding: 7px 24px;
+}
+.theatre-overlay:has(.theatre-tool-panel) .theatre-line p {
+  height: 40px;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.theatre-overlay:has(.theatre-tool-panel) .theatre-await small {
+  display: none;
+}
+.stage:has(.theatre-tool-panel) .theatre-peek {
+  top: 8px;
+  right: 50%;
+  transform: translateX(50%);
 }
 .theatre-portraits {
   flex: 1;
@@ -423,7 +441,7 @@
     translate: 0 0;
   }
 }
-@media (max-width: 1050px) {
+@container (max-width: 700px) {
   .theatre-controls {
     flex-wrap: wrap;
     gap: 4px;
@@ -434,9 +452,6 @@
   .theatre-control-actions {
     justify-content: flex-end;
     flex: 1;
-  }
-  .theatre-overlay.over-play {
-    height: min(460px, 74%);
   }
 }
 @media (max-height: 700px) {
@@ -481,12 +496,6 @@
     display: none;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .theatre-overlay * {
-    animation: none !important;
-    transition: none !important;
-  }
-}
 .theatre-pages {
   display: flex;
   align-items: center;
@@ -503,47 +512,94 @@
 .map-stage .theatre-peek {
   top: 48px;
 }
-/* Performance tools share the same stage-relative anchor, even on narrow screens. */
+/* In-flow controls reserve their own space below dialogue, never over portraits. */
 .theatre-performance-tools {
   display: flex;
   gap: 4px;
 }
-.theatre-tool-popover {
-  position: absolute;
-  right: 10px;
-  bottom: calc(100% + 8px);
-  width: min(320px, calc(100% - 20px));
-  max-height: min(430px, 55dvh);
-  overflow-y: auto;
+.theatre-tool-panel {
+  height: 156px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   overscroll-behavior: contain;
-  padding: 12px;
+  padding: 6px 12px;
   background: #fafbef;
   color: #2b4a3c;
-  border: 1px solid #a9b797;
-  border-radius: 8px;
-  box-shadow: 0 5px 24px #102e2a45;
-  z-index: 8;
+  border-top: 1px solid #a9b797;
 }
-.theatre-tool-popover > header {
+.theatre-tool-panel > header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   border-bottom: 1px solid #d8dfca;
-  padding-bottom: 8px;
-  margin-bottom: 10px;
+  flex: none;
+  padding-bottom: 4px;
+  margin-bottom: 5px;
 }
-.theatre-tool-popover > header strong {
+.theatre-tool-panel > header strong {
+  margin-right: auto;
   font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.theatre-tool-popover p {
+.game-table .theatre-tool-panel > header button[aria-label="收起演出工具"] {
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0;
+}
+.game-table .theatre-tool-panel > header button {
+  min-height: 24px;
+  padding: 2px 8px;
+}
+.theatre-tool-panel p {
   font-size: 12px;
   line-height: 1.7;
   margin: 10px 0 0;
   color: #617560;
+}
+.theatre-tool-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.theatre-tool-panel button {
+  min-height: 28px;
+  padding: 3px 7px;
+  font-size: 12px;
+}
+.theatre-move-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 12px;
+  max-width: 720px;
+  margin: auto;
+}
+.theatre-move-layout .theatre-offset {
+  margin: 0;
+  font-size: 11px;
+}
+.theatre-move-layout .theatre-direction-pad {
+  grid-template-rows: repeat(3, 27px);
+}
+.theatre-move-layout .theatre-direction-pad button {
+  min-height: 27px;
+  padding: 0;
+}
+.theatre-motion-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  background: #f1e7c8;
+  padding: 3px 6px;
+  font-size: 12px;
 }
 .theatre-direction-pad {
   display: grid;
@@ -581,7 +637,7 @@
 }
 .theatre-emote-picker {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(10, minmax(0, 1fr));
   gap: 5px;
 }
 .game-table .theatre-emote-picker button {
@@ -599,22 +655,26 @@
   width: 38px;
   height: 38px;
 }
-.theatre-tool-popover footer {
-  position: sticky;
-  bottom: -12px;
-  z-index: 2;
-  background: #fafbef;
-  padding: 8px 0 4px;
-  border-top: 1px solid #d8dfca;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-  gap: 5px;
-}
-.theatre-tool-popover footer small {
+.theatre-tool-panel > header small {
   font-size: 11px;
   color: #718169;
+}
+.theatre-tool-emote {
+  height: 120px;
+}
+.theatre-tool-move {
+  height: 174px;
+}
+@container (max-width: 700px) {
+  .theatre-tool-emote {
+    height: 196px;
+  }
+  .theatre-emote-picker {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .theatre-tool-action {
+    height: 200px;
+  }
 }
 .theatre-emote {
   position: absolute;

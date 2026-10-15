@@ -1574,7 +1574,7 @@ input.small-input {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *:not(:where(.theatre-overlay, .theatre-overlay *)) {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;

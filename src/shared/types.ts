@@ -218,6 +218,7 @@ export interface Identity {
   role: "gm" | "player";
 }
 export interface Session {
+  serverTime?: number;
   accountLinked?: boolean;
   world: World;
   me: Identity;

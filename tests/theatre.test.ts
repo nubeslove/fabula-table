@@ -3,12 +3,24 @@ import {
   THEATRE_ACTIONS,
   THEATRE_ACTION_IDS,
   theatreLayout,
+  newTheatreAction,
 } from "../src/shared/theatre";
 import assert from "node:assert/strict";
 import { apply, project } from "../server/world";
 import { newWorld, newCharacter, newScene } from "../src/shared/rules";
 const gm = { id: "gm", name: "GM", role: "gm" as const },
   player = { id: "player", name: "玩家", role: "player" as const };
+test("演出新动作只使用服务器时钟判定，重复快照和断线过期动作不重播", () => {
+  const action = { id: "fresh", at: 1000, kind: "shock" as const };
+  // Client Date.now is intentionally nowhere near the server's epoch.
+  assert.ok(Math.abs(Date.now() - action.at) > 5000);
+  assert.equal(newTheatreAction("previous", action, 1050), action);
+  assert.equal(newTheatreAction("fresh", action, 1100), undefined);
+  assert.equal(newTheatreAction("previous", action, 6100), undefined);
+  assert.equal(newTheatreAction("previous", undefined, 1100), undefined);
+  assert.equal(newTheatreAction("previous", action, undefined), action);
+  assert.equal(newTheatreAction(action.id, action, 1050), undefined);
+});
 test("左右换边到外侧并同步保存，动作白名单配表情、可重播且不改变地图", () => {
   const w = fixture();
   start(w);

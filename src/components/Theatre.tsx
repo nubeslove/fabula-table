@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { Command, Scene, Session } from "../shared/types";
 import { Portrait } from "./Common";
 import { TheatrePortrait } from "./TheatrePortrait";
@@ -10,7 +10,7 @@ import "../styles/theatre-actions.css";
 
 export function Theatre({
   scene,
-  session: { world, me },
+  session: { world, me, serverTime },
   urls,
   act,
   configure,
@@ -33,6 +33,7 @@ export function Theatre({
   const gm = me.role === "gm";
   const frame = useRef<HTMLElement>(null);
   const portraits = useRef<HTMLDivElement>(null);
+  const [toolsHost, setToolsHost] = useState<HTMLDivElement | null>(null);
   const [area, setArea] = useState({ width: 1000, height: 250 });
   const [capacity, setCapacity] = useState(6),
     [page, setPage] = useState(0);
@@ -53,7 +54,7 @@ export function Theatre({
   const placements = theatreLayout(
     visibleCast.map((x) => x.slot),
     area.width,
-    area.height,
+    Math.max(0, area.height - 24),
   );
   useEffect(() => {
     if (!frame.current) return;
@@ -127,7 +128,12 @@ export function Theatre({
       {!hidden && (
         <section
           ref={frame}
-          style={{ bottom: battle || scene.mode === "map" ? clearance : 0 }}
+          style={
+            {
+              bottom: battle || scene.mode === "map" ? clearance : 0,
+              "--theatre-clearance": `${battle || scene.mode === "map" ? clearance : 0}px`,
+            } as CSSProperties
+          }
           className={`theatre-overlay ${battle || scene.mode === "map" ? "over-play" : ""} ${reduced ? "still" : ""}`}
           aria-label="小剧场演出"
         >
@@ -146,6 +152,7 @@ export function Theatre({
                   select={() => select(c.id)}
                   stageWidth={area.width}
                   areaHeight={area.height}
+                  serverTime={serverTime}
                   {...placements[c.id]}
                 />
               );
@@ -229,6 +236,9 @@ export function Theatre({
                       slot={selected.slot}
                       name={selected.c.name}
                       act={act}
+                      host={toolsHost}
+                      reduced={reduced}
+                      enableMotion={() => setReduced(false)}
                     />
                     <select
                       aria-label="演出表情"
@@ -308,6 +318,7 @@ export function Theatre({
                 )}
               </div>
             </div>
+            <div className="theatre-tools-host" ref={setToolsHost} />
           </div>
         </section>
       )}

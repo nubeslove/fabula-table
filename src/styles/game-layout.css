@@ -912,9 +912,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .game-table *,
-  .game-table *::before,
-  .game-table *::after {
+  .game-table *:not(:where(.theatre-overlay, .theatre-overlay *)),
+  .game-table *:not(:where(.theatre-overlay, .theatre-overlay *))::before,
+  .game-table *:not(:where(.theatre-overlay, .theatre-overlay *))::after {
     animation: none !important;
     transition: none !important;
   }

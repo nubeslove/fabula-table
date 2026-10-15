@@ -1,4 +1,4 @@
-import type { TheatreEmote } from "./theatre";
+import type { TheatreEmote, TheatreAction, TheatreSide } from "./theatre";
 export type Attribute = "dex" | "ins" | "mig" | "wlp";
 export type Resource = "hp" | "mp" | "ip" | "fabula" | "zenit";
 export interface ClassChoice {
@@ -130,6 +130,9 @@ export interface Scene {
     offset?: { x: number; y: number };
     emote?: TheatreEmote | "";
     emoteId?: string;
+    side?: TheatreSide;
+    dockOrder?: number;
+    action?: { kind: TheatreAction; id: string; at: number };
   }[];
   cues: { id: string; actor: string; expression: string; text: string }[];
   cueIndex: number;
@@ -284,6 +287,13 @@ export type Command =
       scene: string;
       actor: string;
       emote: TheatreEmote | "";
+    }
+  | { type: "theatre.dock"; scene: string; actor: string; side: TheatreSide }
+  | {
+      type: "theatre.action";
+      scene: string;
+      actor: string;
+      action: TheatreAction | "";
     }
   | { type: "stage.focus"; actor: string }
   | { type: "stage.expression"; actor: string; expression: string }

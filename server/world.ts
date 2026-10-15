@@ -17,7 +17,12 @@ import {
 import expansionResourceData from "../src/shared/expansion-resource-index.json";
 const expansionResources: Record<string, string> = expansionResourceData;
 import * as v from "./validation";
-import { THEATRE_EMOTES, moveTheatreOffset } from "../src/shared/theatre";
+import {
+  THEATRE_EMOTES,
+  THEATRE_ACTIONS,
+  THEATRE_ACTION_IDS,
+  moveTheatreOffset,
+} from "../src/shared/theatre";
 import { updateJournal } from "./journal";
 import {
   moveOnGrid,
@@ -505,6 +510,8 @@ export function apply(w: World, me: Identity, input: unknown) {
       break;
     }
     case "theatre.move":
+    case "theatre.dock":
+    case "theatre.action":
     case "theatre.emote": {
       const s = current(w),
         c = actor(w, me, v.id(a.actor));
@@ -518,9 +525,25 @@ export function apply(w: World, me: Identity, input: unknown) {
           a.reset === undefined || !v.bool(a.reset)
             ? moveTheatreOffset(slot.offset, dx, dy)
             : { x: 0, y: 0 };
+      } else if (type === "theatre.dock") {
+        slot.side = v.one(a.side, ["left", "right"] as const);
+        slot.dockOrder =
+          Math.max(0, ...s.cast.map((x) => x.dockOrder ?? 0)) + 1;
+        slot.offset = { x: 0, y: 0 };
+        slot.action = undefined;
+      } else if (type === "theatre.action") {
+        const kind = v.one(a.action, ["", ...THEATRE_ACTION_IDS] as const);
+        slot.action = kind
+          ? { kind, id: randomUUID(), at: Date.now() }
+          : undefined;
+        if (kind) {
+          slot.emote = THEATRE_ACTIONS[kind].emote;
+          slot.emoteId = slot.action!.id;
+        }
       } else {
         slot.emote = v.one(a.emote, ["", ...THEATRE_EMOTES] as const);
         slot.emoteId = randomUUID();
+        slot.action = undefined;
       }
       s.revision++;
       break;

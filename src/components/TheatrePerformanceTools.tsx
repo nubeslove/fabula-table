@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import type { Command, Scene } from "../shared/types";
-import { EMOTE_NAMES, THEATRE_EMOTES } from "../shared/theatre";
+import {
+  EMOTE_NAMES,
+  THEATRE_EMOTES,
+  THEATRE_ACTIONS,
+  THEATRE_ACTION_IDS,
+  theatreSide,
+  type TheatreAction,
+  type TheatreSide,
+} from "../shared/theatre";
 import { TheatreEmote } from "./TheatreEmote";
 
 export function TheatrePerformanceTools({
@@ -14,12 +22,40 @@ export function TheatrePerformanceTools({
   name: string;
   act: (c: Command) => Promise<boolean>;
 }) {
-  const [open, setOpen] = useState<"move" | "emote" | null>(null);
+  const [open, setOpen] = useState<"move" | "emote" | "action" | null>(null);
   const root = useRef<HTMLDivElement>(null),
     moving = useRef(false),
     held = useRef<ReturnType<typeof setInterval>>(),
     lastKey = useRef(0);
   const [busy, setBusy] = useState(false);
+  async function dock(side: TheatreSide) {
+    if (moving.current) return;
+    moving.current = true;
+    try {
+      await act({
+        type: "theatre.dock",
+        scene: scene.id,
+        actor: slot.actor,
+        side,
+      });
+    } finally {
+      moving.current = false;
+    }
+  }
+  async function perform(action: TheatreAction | "") {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await act({
+        type: "theatre.action",
+        scene: scene.id,
+        actor: slot.actor,
+        action,
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
   const move = async (dx: number, dy: number, reset = false) => {
     if (moving.current) return;
     moving.current = true;
@@ -79,6 +115,10 @@ export function TheatrePerformanceTools({
       e.stopPropagation();
       if (e.timeStamp - lastKey.current < 125 && e.repeat) return;
       lastKey.current = e.timeStamp;
+      if (!e.shiftKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        if (!e.repeat) void dock(e.key === "ArrowLeft" ? "left" : "right");
+        return;
+      }
       const step = e.shiftKey ? 1 : 3;
       void move(
         (vector?.[0] ?? 0) * step,
@@ -118,9 +158,15 @@ export function TheatrePerformanceTools({
       <button
         aria-expanded={open === "move"}
         onClick={() => setOpen(open === "move" ? null : "move")}
-        title="Alt+方向键走位；Shift 细调；Alt+Home 归位"
+        title="Alt+左右键快速换边；Shift+Alt+方向键细调；Alt+Home 贴齐台词框"
       >
         走位
+      </button>
+      <button
+        aria-expanded={open === "action"}
+        onClick={() => setOpen(open === "action" ? null : "action")}
+      >
+        动作
       </button>
       <button
         aria-expanded={open === "emote"}
@@ -131,11 +177,18 @@ export function TheatrePerformanceTools({
       {open && (
         <section
           className="theatre-tool-popover"
-          aria-label={open === "move" ? "立绘走位" : "通用表情选择"}
+          aria-label={
+            open === "move"
+              ? "立绘走位"
+              : open === "action"
+                ? "预制动作选择"
+                : "通用表情选择"
+          }
         >
           <header>
             <strong>
-              {name} · {open === "move" ? "走位" : "表情"}
+              {name} ·{" "}
+              {open === "move" ? "走位" : open === "action" ? "动作" : "表情"}
             </strong>
             <button
               aria-label="收起演出工具"
@@ -149,25 +202,40 @@ export function TheatrePerformanceTools({
           </header>
           {open === "move" ? (
             <>
+              <div className="theatre-dock-buttons">
+                <button
+                  aria-pressed={theatreSide(slot) === "left"}
+                  onClick={() => void dock("left")}
+                >
+                  ⇤ 到最左边
+                </button>
+                <button
+                  aria-pressed={theatreSide(slot) === "right"}
+                  onClick={() => void dock("right")}
+                >
+                  到最右边 ⇥
+                </button>
+              </div>
+              <small className="theatre-offset">站位细调</small>
               <div className="theatre-direction-pad">
                 {(
                   [
-                    { label: "上移立绘", text: "↑", dx: 0, dy: -3, key: "up" },
+                    { label: "上移立绘", text: "↑", dx: 0, dy: -1, key: "up" },
                     {
                       label: "左移立绘",
                       text: "←",
-                      dx: -3,
+                      dx: -1,
                       dy: 0,
                       key: "left",
                     },
                     {
                       label: "右移立绘",
                       text: "→",
-                      dx: 3,
+                      dx: 1,
                       dy: 0,
                       key: "right",
                     },
-                    { label: "下移立绘", text: "↓", dx: 0, dy: 3, key: "down" },
+                    { label: "下移立绘", text: "↓", dx: 0, dy: 1, key: "down" },
                   ] as const
                 ).map((d) => (
                   <button
@@ -197,12 +265,45 @@ export function TheatrePerformanceTools({
                 水平 {slot.offset?.x ?? 0} · 垂直 {slot.offset?.y ?? 0}
               </small>
               <p>
-                按住方向按钮连续走位。
+                Alt + 左右键，快速滑到台词框两端。
                 <br />
-                Alt + 方向键移动，另按 Shift 细调。
+                Shift + Alt + 方向键细调；归位贴齐下缘。
                 <br />
                 只移动演出立绘，不消耗地图移动格数。
               </p>
+            </>
+          ) : open === "action" ? (
+            <>
+              <div className="theatre-action-picker">
+                {THEATRE_ACTION_IDS.map((id) => {
+                  const action = THEATRE_ACTIONS[id];
+                  return (
+                    <button
+                      key={id}
+                      disabled={busy}
+                      aria-label={`演出动作：${action.name}`}
+                      title={action.hint}
+                      onClick={() => void perform(id)}
+                    >
+                      {action.emote ? (
+                        <TheatreEmote emote={action.emote} />
+                      ) : (
+                        <span className="theatre-bow-icon" aria-hidden="true">
+                          ↘
+                        </span>
+                      )}
+                      <strong>{action.name}</strong>
+                      <small>{action.hint}</small>
+                    </button>
+                  );
+                })}
+              </div>
+              <footer>
+                <small>动作与表情一起播放 · 点击重播</small>
+                <button disabled={busy} onClick={() => void perform("")}>
+                  停稳
+                </button>
+              </footer>
             </>
           ) : (
             <>

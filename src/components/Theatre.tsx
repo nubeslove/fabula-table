@@ -3,8 +3,10 @@ import type { Command, Scene, Session } from "../shared/types";
 import { Portrait } from "./Common";
 import { TheatrePortrait } from "./TheatrePortrait";
 import { TheatrePerformanceTools } from "./TheatrePerformanceTools";
+import { theatreLayout } from "../shared/theatre";
 import { useTheatreSpeaker } from "./TheatreContext";
 import "../styles/theatre.css";
+import "../styles/theatre-actions.css";
 
 export function Theatre({
   scene,
@@ -47,6 +49,11 @@ export function Theatre({
   const visibleCast = cast.slice(
     Math.min(page, pages - 1) * capacity,
     (Math.min(page, pages - 1) + 1) * capacity,
+  );
+  const placements = theatreLayout(
+    visibleCast.map((x) => x.slot),
+    area.width,
+    area.height,
   );
   useEffect(() => {
     if (!frame.current) return;
@@ -124,26 +131,8 @@ export function Theatre({
           className={`theatre-overlay ${battle || scene.mode === "map" ? "over-play" : ""} ${reduced ? "still" : ""}`}
           aria-label="小剧场演出"
         >
-          <div
-            ref={portraits}
-            className="theatre-portraits"
-            style={{
-              gridTemplateColumns: visibleCast
-                .map(({ c }) => (world.focus === c.id ? "1.35fr" : "1fr"))
-                .join(" "),
-            }}
-          >
-            {visibleCast.map(({ slot, c }, index) => {
-              const weights = visibleCast.map(({ c }) =>
-                world.focus === c.id ? 1.35 : 1,
-              );
-              const unit =
-                (area.width * 0.92 - 8 * Math.max(0, visibleCast.length - 1)) /
-                weights.reduce((n, w) => n + w, 0);
-              const left =
-                area.width * 0.04 +
-                weights.slice(0, index).reduce((n, w) => n + w, 0) * unit +
-                index * 8;
+          <div ref={portraits} className="theatre-portraits">
+            {visibleCast.map(({ slot, c }) => {
               return (
                 <TheatrePortrait
                   key={c.id}
@@ -157,8 +146,7 @@ export function Theatre({
                   select={() => select(c.id)}
                   stageWidth={area.width}
                   areaHeight={area.height}
-                  left={left}
-                  width={unit * weights[index]}
+                  {...placements[c.id]}
                 />
               );
             })}

@@ -1,9 +1,88 @@
 import test from "node:test";
+import {
+  THEATRE_ACTIONS,
+  THEATRE_ACTION_IDS,
+  theatreLayout,
+} from "../src/shared/theatre";
 import assert from "node:assert/strict";
 import { apply, project } from "../server/world";
 import { newWorld, newCharacter, newScene } from "../src/shared/rules";
 const gm = { id: "gm", name: "GM", role: "gm" as const },
   player = { id: "player", name: "玩家", role: "player" as const };
+test("左右换边到外侧并同步保存，动作白名单配表情、可重播且不改变地图", () => {
+  const w = fixture();
+  start(w);
+  const s = w.scenes[0],
+    before = JSON.stringify({
+      tokens: s.tokens,
+      turn: s.exploration,
+      logs: w.logs,
+    });
+  const dock = {
+    type: "theatre.dock",
+    scene: s.id,
+    actor: "pc",
+    side: "right",
+  };
+  apply(w, player, dock);
+  assert.equal(s.cast[0].side, "right");
+  assert.deepEqual(s.cast[0].offset, { x: 0, y: 0 });
+  assert.throws(() => apply(w, player, { ...dock, actor: "npc" }), /不能操作/);
+  assert.throws(() => apply(w, player, { ...dock, side: "center" }));
+  const command = {
+    type: "theatre.action",
+    scene: s.id,
+    actor: "pc",
+    action: "shock",
+  };
+  s.cast[0].expression = "custom-face";
+  for (const id of THEATRE_ACTION_IDS) {
+    apply(w, player, { ...command, action: id });
+    assert.equal(s.cast[0].emote, THEATRE_ACTIONS[id].emote);
+    assert.equal(s.cast[0].expression, "custom-face");
+  }
+  const first = s.cast[0].action!.id;
+  apply(w, player, { ...command, action: "sleepy" });
+  assert.notEqual(s.cast[0].action!.id, first);
+  assert.throws(
+    () => apply(w, player, { ...command, actor: "npc" }),
+    /不能操作/,
+  );
+  assert.throws(() => apply(w, player, { ...command, action: "script" }));
+  assert.deepEqual(
+    project(JSON.parse(JSON.stringify(w)), player).scenes[0].cast[0],
+    s.cast[0],
+  );
+  apply(w, player, { ...command, action: "" });
+  assert.equal(s.cast[0].action, undefined);
+  assert.equal(
+    JSON.stringify({ tokens: s.tokens, turn: s.exploration, logs: w.logs }),
+    before,
+  );
+  s.theatre = false;
+  assert.throws(() => apply(w, player, dock), /未开启/);
+  assert.throws(() => apply(w, player, command), /未开启/);
+});
+test("六人分列两端留中间空间，单侧多人不出界，换边者占外端", () => {
+  const slots = Array.from({ length: 6 }, (_, i) => ({
+    actor: String(i),
+    position: i,
+  }));
+  const layout = theatreLayout(slots, 1000, 260);
+  assert.ok(layout["4"].left + layout["4"].width < layout["5"].left);
+  for (const p of Object.values(layout)) {
+    assert.ok(p.left >= 0 && p.left + p.width <= 1000 && p.height <= 260);
+  }
+  const same = slots.map((s) => ({
+    ...s,
+    side: "right" as const,
+    dockOrder: s.actor === "0" ? 10 : 0,
+  }));
+  const right = theatreLayout(same, 1000, 260);
+  assert.ok(right["0"].left > right["1"].left);
+  for (const p of Object.values(right))
+    assert.ok(p.left >= 0 && p.left + p.width <= 1000);
+});
 function fixture() {
   const w = newWorld("theatre", "小剧场", gm);
   const pc = newCharacter("pc", player.id),

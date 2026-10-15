@@ -11,6 +11,83 @@ export const THEATRE_EMOTES = [
   "sleepy",
 ] as const;
 export type TheatreEmote = (typeof THEATRE_EMOTES)[number];
+export const THEATRE_ACTIONS = {
+  shock: {
+    name: "震惊",
+    emote: "surprise",
+    ms: 600,
+    hint: "晃动两下，惊讶弹出",
+  },
+  joy: { name: "开心", emote: "happy", ms: 720, hint: "轻跳两次" },
+  angry: { name: "生气", emote: "angry", ms: 650, hint: "急促左右摆动" },
+  fear: { name: "害怕", emote: "nervous", ms: 850, hint: "紧张地小幅颤抖" },
+  question: {
+    name: "疑惑",
+    emote: "question",
+    ms: 900,
+    hint: "歪头，停顿，回正",
+  },
+  nod: { name: "点头", emote: "happy", ms: 650, hint: "连续点头两次" },
+  no: { name: "摇头", emote: "question", ms: 700, hint: "左右摇头两次" },
+  bow: { name: "鞠躬", emote: "", ms: 1000, hint: "前倾致意后起身" },
+  sad: { name: "沮丧", emote: "sad", ms: 1100, hint: "缓缓低下头" },
+  proud: { name: "得意", emote: "happy", ms: 800, hint: "昂起身子，轻轻一抖" },
+  love: { name: "撒娇", emote: "heart", ms: 1000, hint: "柔和摇摆，爱心浮现" },
+  sleepy: { name: "瞌睡", emote: "sleepy", ms: 1300, hint: "慢慢点头打瞌睡" },
+} as const;
+export type TheatreAction = keyof typeof THEATRE_ACTIONS;
+export const THEATRE_ACTION_IDS = Object.keys(
+  THEATRE_ACTIONS,
+) as TheatreAction[];
+export type TheatreSide = "left" | "right";
+export function theatreSide(slot: {
+  side?: TheatreSide;
+  position: number;
+}): TheatreSide {
+  return slot.side ?? (slot.position % 2 === 0 ? "left" : "right");
+}
+/** Stable edge grouping: changing speaker never moves other portraits. */
+export function theatreLayout<
+  T extends {
+    actor: string;
+    position: number;
+    side?: TheatreSide;
+    dockOrder?: number;
+  },
+>(slots: T[], width: number, height: number) {
+  const groups = {
+    left: slots.filter((s) => theatreSide(s) === "left"),
+    right: slots.filter((s) => theatreSide(s) === "right"),
+  };
+  const both = groups.left.length > 0 && groups.right.length > 0;
+  const count = Math.max(groups.left.length, groups.right.length);
+  const result: Record<
+    string,
+    { left: number; width: number; height: number; layer: number }
+  > = {};
+  for (const side of ["left", "right"] as const) {
+    const group = groups[side].sort(
+      (a, b) =>
+        (b.dockOrder ?? 0) - (a.dockOrder ?? 0) || a.position - b.position,
+    );
+    const budget = Math.max(0, width - 20) * (both ? 0.45 : 0.78);
+    const cardWidth = Math.min(
+      240,
+      height * 0.94,
+      budget / (1 + Math.max(0, count - 1) * 0.82),
+    );
+    group.forEach((s, i) => {
+      const edge = 10 + i * cardWidth * 0.82;
+      result[s.actor] = {
+        left: side === "left" ? edge : width - edge - cardWidth,
+        width: cardWidth,
+        height: Math.min(height, cardWidth * 1.4),
+        layer: group.length - i,
+      };
+    });
+  }
+  return result;
+}
 export const EMOTE_NAMES: Record<TheatreEmote, string> = {
   happy: "开心",
   surprise: "惊讶",

@@ -1,7 +1,7 @@
 import type { Character, Scene, Clock } from "../src/shared/types";
 import { EQUIPMENT, STATUS } from "../src/shared/rules";
 import { DEFAULT_GRID } from "../src/shared/exploration";
-import { THEATRE_EMOTES } from "../src/shared/theatre";
+import { THEATRE_EMOTES, THEATRE_ACTION_IDS } from "../src/shared/theatre";
 export class UserError extends Error {
   constructor(
     message: string,
@@ -284,6 +284,19 @@ export function scene(v: unknown): Scene {
             ? undefined
             : one(c.emote, ["", ...THEATRE_EMOTES] as const),
         emoteId: c.emoteId === undefined ? undefined : str(c.emoteId, 80),
+        side:
+          c.side === undefined
+            ? undefined
+            : one(c.side, ["left", "right"] as const),
+        dockOrder: c.dockOrder === undefined ? undefined : int(c.dockOrder, 0),
+        action:
+          c.action === undefined
+            ? undefined
+            : {
+                kind: one(obj(c.action).kind, THEATRE_ACTION_IDS),
+                id: id(obj(c.action).id),
+                at: num(obj(c.action).at, 0, Number.MAX_SAFE_INTEGER),
+              },
       };
     },
     6,

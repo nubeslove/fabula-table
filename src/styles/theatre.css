@@ -27,28 +27,31 @@
   bottom: 64px;
   height: min(460px, 72%);
 }
+.theatre-overlay:has(.theatre-tool-popover) {
+  z-index: 25;
+}
 .theatre-portraits {
   flex: 1;
   min-height: 0;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr);
-  align-items: end;
-  padding: 0 4%;
-  gap: 8px;
-  max-width: 1250px;
+  position: relative;
+  z-index: 0;
   width: 100%;
   align-self: center;
-  transition: grid-template-columns 0.3s ease;
 }
 .theatre-cell {
-  position: relative;
+  position: absolute;
+  left: 0;
+  bottom: 0;
   min-width: 0;
   min-height: 0;
-  height: 100%;
+  transition:
+    transform 0.32s cubic-bezier(0.2, 0.8, 0.25, 1),
+    width 0.24s ease,
+    height 0.24s ease;
 }
 .theatre-position {
   position: absolute;
-  inset: 0 0 20%;
+  inset: 0;
   transition: transform 0.16s linear;
 }
 .theatre-actor {
@@ -68,7 +71,7 @@
   animation: theatre-enter 0.35s ease-out both;
 }
 .theatre-art {
-  flex: 1;
+  height: 100%;
   min-height: 0;
   position: relative;
   width: 100%;
@@ -116,12 +119,16 @@
   filter: drop-shadow(0 0 8px #ece6bd25);
 }
 .game-table button.theatre-name {
-  flex: 0 0 28px;
+  position: absolute;
+  bottom: 3px;
+  left: 0;
+  width: 100%;
+  z-index: 4;
   pointer-events: auto;
   max-width: 100%;
   border: none;
   border-radius: 0;
-  background: transparent;
+  background: linear-gradient(90deg, transparent, #102b2970, transparent);
   color: #fffce6;
   text-shadow:
     0 1px 3px #102b29,
@@ -447,10 +454,6 @@
   }
 }
 @media (max-width: 650px) {
-  .theatre-portraits {
-    gap: 0;
-    padding: 0 2%;
-  }
   .game-table button.theatre-name {
     font-size: 11px;
     padding: 2px;
@@ -510,6 +513,9 @@
   right: 10px;
   bottom: calc(100% + 8px);
   width: min(320px, calc(100% - 20px));
+  max-height: min(430px, 55dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 12px;
   background: #fafbef;
   color: #2b4a3c;
@@ -594,6 +600,12 @@
   height: 38px;
 }
 .theatre-tool-popover footer {
+  position: sticky;
+  bottom: -12px;
+  z-index: 2;
+  background: #fafbef;
+  padding: 8px 0 4px;
+  border-top: 1px solid #d8dfca;
   display: flex;
   justify-content: space-between;
   align-items: center;

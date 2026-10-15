@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { Identity, Session } from "../shared/types";
 import { Modal } from "./Common";
+import { SoundSettings } from "./InterfaceSound";
 
 const PAGES = [
   ["世界设置", "M12 3v18 M3 12h18 M5 5l14 14 M5 19L19 5"],
@@ -98,6 +99,7 @@ export function TableHeader({
           ))}
         </nav>
         <div className="table-header-actions">
+          <SoundSettings />
           <span
             className={`table-presence ${connected ? "online" : ""}`}
             title={`${me.name} · ${me.role === "gm" ? "GM" : "玩家"} · ${connected ? "已连接" : "重连中"}`}

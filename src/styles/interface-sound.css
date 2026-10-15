@@ -1,0 +1,95 @@
+.sound-settings {
+  position: relative;
+  flex: none;
+}
+.sound-settings > button {
+  display: grid;
+  place-items: center;
+  padding: 7px;
+  min-width: 34px;
+}
+.sound-settings > button svg {
+  width: 18px;
+  height: 18px;
+}
+.sound-popover {
+  position: absolute;
+  z-index: 180;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(300px, calc(100vw - 24px));
+  padding: 16px;
+  color: #294f44;
+  background: #fffdf4;
+  border: 1px solid #a4b4a0;
+  border-radius: 8px;
+  box-shadow: 0 12px 35px #132f3626;
+}
+.sound-popover header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.sound-popover header button {
+  min-height: 28px;
+  padding: 2px 8px;
+}
+.sound-popover .sound-switch {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 12px 0 7px;
+}
+.sound-switch input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #3f715c;
+}
+.sound-switch b {
+  font-size: 13px;
+}
+.sound-switch small {
+  margin-left: auto;
+  font-size: 11px;
+  color: #637765;
+}
+.sound-popover .sound-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.sound-range input {
+  min-width: 0;
+  flex: 1;
+  width: 90px;
+  padding: 0;
+  accent-color: #56795f;
+}
+.sound-range output {
+  min-width: 30px;
+  text-align: right;
+}
+.sound-popover footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid #d9dfce;
+  margin-top: 16px;
+  padding-top: 12px;
+}
+.sound-popover footer small {
+  font-size: 10px;
+  line-height: 1.5;
+}
+.sound-popover footer button,
+.sound-play {
+  font-size: 12px;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+.sound-play {
+  margin-top: 8px;
+}

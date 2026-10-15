@@ -25,7 +25,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/build.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          node --import tsx --test tests/online-update.test.ts tests/windows-service.test.ts tests/windows-deploy.test.ts tests/windows-upgrade.test.ts
+          node --import tsx --test tests/online-update.test.ts tests/windows-service.test.ts tests/windows-deploy.test.ts tests/windows-upgrade.test.ts tests/interface-audio.test.ts tests/http.test.ts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/package.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

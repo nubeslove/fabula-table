@@ -171,8 +171,15 @@ const lobby = lobbyRoutes({
     send(res, snapshot(room, { id: u.id, name: u.name, role: u.role }));
   },
 });
-const admin = adminRoutes({ read: jsonBody, send, rate, cookie, set: setCookie, clear: clearCookie,
-  online: () => [...clients.values()].reduce((n, connections) => n + connections.size, 0),
+const admin = adminRoutes({
+  read: jsonBody,
+  send,
+  rate,
+  cookie,
+  set: setCookie,
+  clear: clearCookie,
+  online: () =>
+    [...clients.values()].reduce((n, connections) => n + connections.size, 0),
 });
 const types: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -183,6 +190,7 @@ const types: Record<string, string> = {
   ".webp": "image/webp",
   ".png": "image/png",
   ".ico": "image/x-icon",
+  ".ogg": "audio/ogg",
 };
 function mediaType(buf: Buffer) {
   if (buf.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])))
@@ -295,7 +303,12 @@ const server = createServer(async (req, res) => {
       return;
     }
     if (await admin.handle(path, req, res)) return;
-    if (path.startsWith("/api/")) v.insist(!admin.maintenance(), "服务器正在更新，请稍候；原数据会保留", 503);
+    if (path.startsWith("/api/"))
+      v.insist(
+        !admin.maintenance(),
+        "服务器正在更新，请稍候；原数据会保留",
+        503,
+      );
     if (path.startsWith("/api/")) admin.activity();
     if (await lobby(path, req, res)) return;
     if (path === "/api/session") {
@@ -466,6 +479,42 @@ const server = createServer(async (req, res) => {
       "Content-Security-Policy":
         "default-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
     };
+    // Let the browser read Ogg end metadata and seek the small lobby loop.
+    if (extname(file) === ".ogg") {
+      headers["Accept-Ranges"] = "bytes";
+      const range =
+        req.method === "GET" && req.headers.range?.match(/^bytes=(\d*)-(\d*)$/);
+      if (range && (range[1] || range[2])) {
+        const size = data.length;
+        const start = range[1]
+          ? Number(range[1])
+          : Math.max(0, size - Number(range[2]));
+        const end =
+          range[1] && range[2]
+            ? Math.min(Number(range[2]), size - 1)
+            : size - 1;
+        if (
+          !Number.isSafeInteger(start) ||
+          !Number.isSafeInteger(end) ||
+          start > end ||
+          start >= size
+        ) {
+          res.writeHead(416, {
+            ...headers,
+            "Content-Range": `bytes */${size}`,
+          });
+          res.end();
+          return;
+        }
+        res.writeHead(206, {
+          ...headers,
+          "Content-Range": `bytes ${start}-${end}/${size}`,
+          "Content-Length": String(end - start + 1),
+        });
+        res.end(data.subarray(start, end + 1));
+        return;
+      }
+    }
     if (
       req.headers["accept-encoding"]?.includes("gzip") &&
       data.length > 1024 &&
@@ -493,8 +542,14 @@ const server = createServer(async (req, res) => {
   }
 });
 process.on("message", (message) => {
-  if (message && typeof message === "object" && "type" in message && message.type === "fu:shutdown") {
-    for (const connections of clients.values()) for (const client of connections) client.res.end();
+  if (
+    message &&
+    typeof message === "object" &&
+    "type" in message &&
+    message.type === "fu:shutdown"
+  ) {
+    for (const connections of clients.values())
+      for (const client of connections) client.res.end();
     server.close(() => process.exit(0));
   }
 });

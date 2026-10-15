@@ -1,4 +1,5 @@
 import { Lobby } from "./components/Lobby";
+import { useSoundScene } from "./components/InterfaceSound";
 import { useEffect, useState } from "react";
 import type {
   Character,
@@ -33,6 +34,9 @@ const query = new URLSearchParams(location.search);
 export default function App() {
   const [session, setSession] = useState<Session | null>(null),
     [loading, setLoading] = useState(true);
+  useSoundScene(
+    query.has("preload") || loading ? "silent" : session ? "world" : "lobby",
+  );
   useEffect(() => {
     if (query.has("preload")) return;
     void api("session")

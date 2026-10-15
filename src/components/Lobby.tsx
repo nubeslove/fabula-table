@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import { Field, ErrorText, Modal } from "./Common";
 import { ExpansionPicker } from "./ExpansionPicker";
 import { ServerAdmin } from "./ServerAdmin";
+import { SoundSettings } from "./InterfaceSound";
 interface RoomCard {
   legacy: boolean;
   id: string;
@@ -82,6 +83,7 @@ export function Lobby({ enter }: { enter: (s: Session) => void }) {
           <h1>物语大厅</h1>
         </div>
         <button onClick={() => setAdminOpen(true)}>服务器管理</button>
+        <SoundSettings />
         {data?.account && (
           <div className="button-row">
             <span>{data.account.name}</span>

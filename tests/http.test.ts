@@ -64,6 +64,25 @@ test("HTTP：独立入口、认证、玩家权限、素材授权、只读预下�
         body: JSON.stringify(value),
       });
     assert.equal((await fetch(base + "/api/session")).status, 401);
+    const musicHead = await fetch(base + "/audio/lobby-harp.ogg", {
+      method: "HEAD",
+    });
+    assert.equal(musicHead.headers.get("content-type"), "audio/ogg");
+    assert.equal(musicHead.headers.get("accept-ranges"), "bytes");
+    const musicRange = await fetch(base + "/audio/lobby-harp.ogg", {
+      headers: { Range: "bytes=0-63" },
+    });
+    assert.equal(musicRange.status, 206);
+    assert.equal((await musicRange.arrayBuffer()).byteLength, 64);
+    const musicEnd = await fetch(base + "/audio/lobby-harp.ogg", {
+      headers: { Range: "bytes=-128" },
+    });
+    assert.equal(musicEnd.status, 206);
+    assert.equal((await musicEnd.arrayBuffer()).byteLength, 128);
+    const invalidMusicRange = await fetch(base + "/audio/lobby-harp.ogg", {
+      headers: { Range: "bytes=99999999-" },
+    });
+    assert.equal(invalidMusicRange.status, 416);
     const gmAccount = await post("account/register", {
       name: "GM",
       password: "password-one",

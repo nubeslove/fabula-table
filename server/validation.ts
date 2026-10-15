@@ -270,6 +270,7 @@ export function scene(v: unknown): Scene {
         actor: id(c.actor),
         expression: asset(c.expression),
         position: int(c.position, 0, 5),
+        mirrored: c.mirrored === undefined ? false : bool(c.mirrored),
       };
     },
     6,
@@ -294,6 +295,7 @@ export function scene(v: unknown): Scene {
       diagonal: bool(grid.diagonal),
     },
     cast,
+    theatre: s.theatre === undefined ? false : bool(s.theatre),
     cues: list(
       s.cues,
       (x) => {

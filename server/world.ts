@@ -330,6 +330,8 @@ export function apply(w: World, me: Identity, input: unknown) {
       v.insist(!!old || w.scenes.length < 80, "场景已达 80 个");
       checkScene(w, s);
       preserveExploration(old, s);
+      // Runtime performance is changed by its dedicated command, never by a stale editor.
+      s.theatre = old?.theatre ?? false;
       if (s.id === w.activeScene) s.public = true;
       s.revision = (old?.revision ?? -1) + 1;
       if (old) w.scenes[w.scenes.indexOf(old)] = s;
@@ -467,6 +469,40 @@ export function apply(w: World, me: Identity, input: unknown) {
       s.revision++;
       break;
     }
+    case "theatre.configure": {
+      gm(me);
+      const s = current(w);
+      v.insist(s.id === v.id(a.scene), "当前场景已改变，请重新打开选角");
+      expected(s.revision, a.expected);
+      const active = v.bool(a.active),
+        ids = v.list(a.actors, v.id, 6);
+      v.unique(ids);
+      // Validate the entire selection before changing the world.
+      for (const id of ids)
+        v.insist(actor(w, me, id).public, "请先将登场角色设为公开");
+      s.cast = ids.map((id, position) => ({
+        actor: id,
+        expression: "",
+        ...s.cast.find((slot) => slot.actor === id),
+        position,
+      }));
+      if (!s.theatre || !active || (w.focus && !ids.includes(w.focus))) {
+        w.focus = "";
+        w.speech = null;
+      }
+      s.theatre = active;
+      s.revision++;
+      break;
+    }
+    case "theatre.mirror": {
+      const s = current(w),
+        c = actor(w, me, v.id(a.actor));
+      const slot = s.cast.find((x) => x.actor === c.id);
+      v.insist(slot && c.public, "角色尚未登台");
+      slot.mirrored = v.bool(a.mirrored);
+      s.revision++;
+      break;
+    }
     case "stage.focus": {
       gm(me);
       const id = a.actor === "" ? "" : v.id(a.actor);
@@ -479,12 +515,12 @@ export function apply(w: World, me: Identity, input: unknown) {
       break;
     }
     case "stage.expression": {
-      gm(me);
       const s = current(w),
         slot = s.cast.find((x) => x.actor === v.id(a.actor));
       v.insist(slot, "角色尚未登台");
       const c = actor(w, me, slot.actor),
         expression = a.expression === "" ? "" : v.id(a.expression);
+      v.insist(c.public, "请先将角色设为公开");
       v.insist(
         !expression || c.expressions.some((e) => e.id === expression),
         "表情不存在",
@@ -500,9 +536,29 @@ export function apply(w: World, me: Identity, input: unknown) {
         a.channel === undefined
           ? "ooc"
           : v.one(a.channel, ["ic", "ooc"] as const);
-      const c = channel === "ic" ? actor(w, me, v.id(a.actor)) : undefined;
+      const narrator = channel === "ic" && a.actor === "";
+      if (narrator) gm(me);
+      const c =
+        channel === "ic" && !narrator ? actor(w, me, v.id(a.actor)) : undefined;
       v.insist(!c || c.public, "私密角色不能向全团发言");
-      addLog(w, me, "chat", text, c, { channel });
+      addLog(w, me, "chat", text, c, {
+        channel,
+        ...(narrator ? { name: "旁白" } : {}),
+      });
+      const s = current(w);
+      if (
+        channel === "ic" &&
+        s.theatre &&
+        (narrator || s.cast.some((x) => x.actor === c?.id))
+      ) {
+        w.focus = c?.id ?? "";
+        w.speech = {
+          actor: c?.id ?? "",
+          name: c?.name ?? "旁白",
+          text,
+          id: randomUUID(),
+        };
+      }
       break;
     }
     case "say": {

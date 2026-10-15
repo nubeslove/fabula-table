@@ -119,7 +119,14 @@ export interface Scene {
   /** Optional for saves created before square-grid exploration. */
   grid?: ExplorationGrid;
   exploration?: ExplorationTurn;
-  cast: { actor: string; expression: string; position: number }[];
+  /** Shared performance mode; absent in older saves means closed. */
+  theatre?: boolean;
+  cast: {
+    actor: string;
+    expression: string;
+    position: number;
+    mirrored?: boolean;
+  }[];
   cues: { id: string; actor: string; expression: string; text: string }[];
   cueIndex: number;
 }
@@ -252,6 +259,14 @@ export type Command =
       expected: number;
     }
   | { type: "stage.cast"; actor: string; present: boolean; position?: number }
+  | {
+      type: "theatre.configure";
+      scene: string;
+      expected: number;
+      active: boolean;
+      actors: string[];
+    }
+  | { type: "theatre.mirror"; actor: string; mirrored: boolean }
   | { type: "stage.focus"; actor: string }
   | { type: "stage.expression"; actor: string; expression: string }
   | { type: "say"; actor: string; text: string }

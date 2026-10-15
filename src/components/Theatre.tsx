@@ -1,0 +1,367 @@
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import type { Command, Scene, Session } from "../shared/types";
+import { Portrait } from "./Common";
+import { useTheatreSpeaker } from "./TheatreContext";
+import "../styles/theatre.css";
+
+export function Theatre({
+  scene,
+  session: { world, me },
+  urls,
+  act,
+  configure,
+  reduced,
+  setReduced,
+  battle,
+}: {
+  scene: Scene;
+  session: Session;
+  urls: Record<string, string>;
+  act: (c: Command) => Promise<boolean>;
+  configure: () => void;
+  reduced: boolean;
+  setReduced: (value: boolean) => void;
+  battle: boolean;
+}) {
+  const { speaker, chooseSpeaker } = useTheatreSpeaker();
+  const [hidden, setHidden] = useState(false),
+    [busy, setBusy] = useState(false);
+  const gm = me.role === "gm";
+  const frame = useRef<HTMLElement>(null);
+  const [capacity, setCapacity] = useState(6),
+    [page, setPage] = useState(0);
+  const [clearance, setClearance] = useState(64);
+  const cast = [...scene.cast]
+    .sort((a, b) => a.position - b.position)
+    .flatMap((slot) => {
+      const c = world.characters.find((c) => c.id === slot.actor && c.public);
+      return c ? [{ slot, c }] : [];
+    });
+  const mine = cast.filter(({ c }) => gm || c.owner === me.id);
+  const selected = mine.find(({ c }) => c.id === speaker);
+  const pages = Math.max(1, Math.ceil(cast.length / capacity));
+  const visibleCast = cast.slice(
+    Math.min(page, pages - 1) * capacity,
+    (Math.min(page, pages - 1) + 1) * capacity,
+  );
+  useEffect(() => {
+    if (!frame.current) return;
+    const hud = frame.current.parentElement?.querySelector(
+      ".battle-command-bar, .exploration-hud",
+    );
+    const observer = new ResizeObserver(() => {
+      const width = frame.current?.clientWidth ?? 1000;
+      setCapacity(width < 450 ? 2 : width < 700 ? 3 : 6);
+      setClearance(hud ? Math.ceil(hud.getBoundingClientRect().height) : 0);
+    });
+    observer.observe(frame.current);
+    if (hud) observer.observe(hud);
+    return () => observer.disconnect();
+  }, [scene.theatre, hidden, battle, scene.mode]);
+  useEffect(() => {
+    const index = cast.findIndex(({ c }) => c.id === world.focus);
+    if (index >= 0) setPage(Math.floor(index / capacity));
+  }, [world.focus, capacity]);
+  useEffect(() => setHidden(false), [scene.id, scene.theatre]);
+  async function run(c: Command) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await act(c);
+    } finally {
+      setBusy(false);
+    }
+  }
+  function select(id: string) {
+    chooseSpeaker(id);
+    if (gm) void run({ type: "stage.focus", actor: id });
+  }
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (
+        !scene.theatre ||
+        e.ctrlKey ||
+        e.metaKey ||
+        e.altKey ||
+        /INPUT|TEXTAREA|SELECT/.test((e.target as HTMLElement).tagName) ||
+        document.querySelector("dialog[open],.table-drawer")
+      )
+        return;
+      const item = mine[Number(e.key) - 1];
+      if (item) {
+        e.preventDefault();
+        select(item.c.id);
+      }
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [scene.theatre, mine.map((x) => x.c.id).join(","), busy]);
+  if (!scene.theatre) return null;
+  return (
+    <>
+      <button
+        className="theatre-peek"
+        onClick={() => setHidden(!hidden)}
+        aria-pressed={!hidden}
+        title="只影响自己的画面，不会结束全团演出"
+      >
+        {hidden ? "展开小剧场" : "暂收立绘"} <span>{hidden ? "⌃" : "⌄"}</span>
+      </button>
+      {!hidden && (
+        <section
+          ref={frame}
+          style={{ bottom: battle || scene.mode === "map" ? clearance : 0 }}
+          className={`theatre-overlay ${battle || scene.mode === "map" ? "over-play" : ""} ${reduced ? "still" : ""}`}
+          aria-label="小剧场演出"
+        >
+          <div
+            className="theatre-portraits"
+            style={{
+              gridTemplateColumns: visibleCast
+                .map(({ c }) => (world.focus === c.id ? "1.35fr" : "1fr"))
+                .join(" "),
+            }}
+          >
+            {visibleCast.map(({ slot, c }) => {
+              const active = world.focus === c.id,
+                owned = gm || c.owner === me.id;
+              return (
+                <div
+                  key={c.id}
+                  className={`theatre-actor ${active ? "is-speaking" : world.focus ? "is-listening" : ""}`}
+                  style={{ "--actor-color": c.color } as CSSProperties}
+                >
+                  <div
+                    className="theatre-art"
+                    style={{
+                      transform: slot.mirrored ? "scaleX(-1)" : undefined,
+                    }}
+                  >
+                    <Portrait
+                      name={c.name}
+                      color={c.color}
+                      src={
+                        urls[
+                          c.expressions.find((e) => e.id === slot.expression)
+                            ?.asset || c.portrait
+                        ]
+                      }
+                    />
+                  </div>
+                  <button
+                    className="theatre-name"
+                    disabled={!owned || busy}
+                    onClick={() => select(c.id)}
+                    title={owned ? `切换发言：${c.name}` : c.name}
+                  >
+                    <span>{active ? "◆" : "◇"}</span> {c.name}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <div className="theatre-dialogue-shell">
+            {world.speech ? (
+              <TheatreLine
+                key={world.speech.id}
+                speech={world.speech}
+                reduced={reduced}
+              />
+            ) : (
+              <div className="theatre-line theatre-await">
+                <span className="theatre-speaker">
+                  {world.characters.find((c) => c.id === world.focus)?.name ||
+                    "幕间"}
+                </span>
+                <p>{world.focus ? "正在倾听……" : "故事在此刻继续。"}</p>
+                <small>场内发言会显示在这里</small>
+              </div>
+            )}
+            <div className="theatre-controls">
+              <div className="theatre-identities" aria-label="演出换角">
+                {gm && (
+                  <button
+                    className={speaker === "" ? "selected" : ""}
+                    onClick={() => select("")}
+                    disabled={busy}
+                  >
+                    旁白
+                  </button>
+                )}
+                {mine.map(({ c }, i) => (
+                  <button
+                    key={c.id}
+                    className={speaker === c.id ? "selected" : ""}
+                    title={`${i + 1} · ${c.name}`}
+                    onClick={() => select(c.id)}
+                    disabled={busy}
+                  >
+                    <Portrait
+                      name={c.name}
+                      src={urls[c.portrait]}
+                      color={c.color}
+                    />
+                    <span>{c.name}</span>
+                  </button>
+                ))}
+                {!mine.length && !gm && (
+                  <small>观看演出 · 等待自己的角色登场</small>
+                )}
+              </div>
+              <div className="theatre-control-actions">
+                {pages > 1 && (
+                  <div className="theatre-pages">
+                    <button
+                      aria-label="上一组立绘"
+                      disabled={page <= 0}
+                      onClick={() => setPage(page - 1)}
+                    >
+                      ‹
+                    </button>
+                    <small>
+                      立绘 {Math.min(page + 1, pages)}/{pages}
+                    </small>
+                    <button
+                      aria-label="下一组立绘"
+                      disabled={page >= pages - 1}
+                      onClick={() => setPage(page + 1)}
+                    >
+                      ›
+                    </button>
+                  </div>
+                )}
+                {selected && (
+                  <>
+                    <select
+                      aria-label="演出表情"
+                      disabled={busy}
+                      value={selected.slot.expression}
+                      onChange={(e) =>
+                        void run({
+                          type: "stage.expression",
+                          actor: selected.c.id,
+                          expression: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="">默认表情</option>
+                      {selected.c.expressions.map((e) => (
+                        <option key={e.id} value={e.id}>
+                          {e.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      title="左右翻转当前立绘"
+                      disabled={busy}
+                      onClick={() =>
+                        void run({
+                          type: "theatre.mirror",
+                          actor: selected.c.id,
+                          mirrored: !selected.slot.mirrored,
+                        })
+                      }
+                    >
+                      镜像
+                    </button>
+                  </>
+                )}
+                <button
+                  aria-pressed={!reduced}
+                  onClick={() => setReduced(!reduced)}
+                  title="本机的立绘过渡和逐字显示"
+                >
+                  {reduced ? "动态关" : "动态开"}
+                </button>
+                {gm && (
+                  <>
+                    {scene.cues.length > 0 && (
+                      <button
+                        disabled={
+                          busy || scene.cueIndex >= scene.cues.length - 1
+                        }
+                        title={
+                          scene.cues[scene.cueIndex + 1]?.text ||
+                          "预制台词已结束"
+                        }
+                        onClick={() =>
+                          void run({ type: "cue", index: scene.cueIndex + 1 })
+                        }
+                      >
+                        下一句
+                      </button>
+                    )}
+                    <button onClick={configure}>选角</button>
+                    <button
+                      disabled={busy}
+                      onClick={() =>
+                        void run({
+                          type: "theatre.configure",
+                          scene: scene.id,
+                          expected: scene.revision,
+                          active: false,
+                          actors: cast.map((x) => x.c.id),
+                        })
+                      }
+                    >
+                      谢幕
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+    </>
+  );
+}
+
+function TheatreLine({
+  speech,
+  reduced,
+}: {
+  speech: NonNullable<Session["world"]["speech"]>;
+  reduced: boolean;
+}) {
+  const chars = Array.from(speech.text),
+    [count, setCount] = useState(reduced ? chars.length : 0);
+  const [complete, setComplete] = useState(false);
+  useEffect(() => {
+    if (reduced || complete) {
+      setCount(chars.length);
+      return;
+    }
+    const started = performance.now();
+    const timer = window.setInterval(() => {
+      const next = Math.min(
+        chars.length,
+        Math.floor((performance.now() - started) / 24),
+      );
+      setCount((current) => Math.max(current, next));
+      if (next >= chars.length) clearInterval(timer);
+    }, 32);
+    return () => clearInterval(timer);
+  }, [speech.id, reduced, complete]);
+  return (
+    <div className="theatre-line">
+      <div className="theatre-line-heading">
+        <strong className="theatre-speaker">{speech.name}</strong>
+        <button
+          onClick={() => setComplete(true)}
+          disabled={count >= chars.length}
+          title="立即显示完整台词"
+        >
+          {count < chars.length ? "显示全文 ▸" : "◆"}
+        </button>
+      </div>
+      <p
+        tabIndex={0}
+        aria-label={`${speech.name}：${speech.text}`}
+        onClick={() => setComplete(true)}
+      >
+        <span aria-hidden="true">{chars.slice(0, count).join("")}</span>
+      </p>
+    </div>
+  );
+}

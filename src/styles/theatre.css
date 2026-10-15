@@ -1,0 +1,476 @@
+.theatre-launch {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  white-space: nowrap;
+}
+.theatre-launch svg {
+  width: 18px;
+  height: 18px;
+}
+.theatre-live {
+  color: #466e59;
+  white-space: nowrap;
+}
+.theatre-overlay {
+  position: absolute;
+  z-index: 12;
+  inset: auto 0 0;
+  height: min(490px, 76%);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.theatre-overlay.over-play {
+  bottom: 64px;
+  height: min(460px, 72%);
+}
+.theatre-portraits {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  align-items: end;
+  padding: 0 4%;
+  gap: 8px;
+  max-width: 1250px;
+  width: 100%;
+  align-self: center;
+  transition: grid-template-columns 0.3s ease;
+}
+.theatre-actor {
+  position: relative;
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  transform-origin: bottom center;
+  transition:
+    filter 0.3s,
+    transform 0.3s,
+    opacity 0.3s;
+  animation: theatre-enter 0.35s ease-out both;
+}
+.theatre-art {
+  height: calc(100% - 28px);
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.theatre-art .portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  filter: drop-shadow(0 5px 6px #102a2870);
+}
+.theatre-art .portrait.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 140px);
+  max-height: 160px;
+  aspect-ratio: 3/4;
+  font-family: serif;
+  font-size: 44px;
+  color: #f5f2de;
+  border-radius: 50% 50% 8px 8px;
+  border: 1px solid #d0c38e;
+  opacity: 0.9;
+}
+.theatre-actor.is-listening {
+  filter: brightness(0.6) saturate(0.65);
+  transform: translateY(6px) scale(0.91);
+}
+.theatre-actor.is-speaking {
+  z-index: 2;
+  filter: drop-shadow(0 0 8px #ece6bd25);
+}
+.game-table button.theatre-name {
+  pointer-events: auto;
+  max-width: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #fffce6;
+  text-shadow:
+    0 1px 3px #102b29,
+    0 0 7px #102b29;
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  padding: 3px 6px;
+  min-height: 28px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 1;
+}
+.theatre-name span {
+  color: #e3d49e;
+}
+.theatre-name:disabled {
+  cursor: default;
+}
+.theatre-dialogue-shell {
+  flex: none;
+  pointer-events: auto;
+  color: #fbf9e9;
+  background: linear-gradient(100deg, #122f2cf5, #1b3b34ec 72%, #31503ce8);
+  border-top: 1px solid #cfbe79ba;
+  box-shadow: 0 -10px 30px #18392c18;
+}
+.theatre-line {
+  height: 130px;
+  padding: 12px 30px 10px;
+  position: relative;
+}
+.theatre-line:before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 20px;
+  bottom: 18px;
+  width: 2px;
+  background: linear-gradient(#d4bf75, transparent);
+}
+.theatre-line-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.theatre-speaker {
+  font:
+    600 21px/1.2 Georgia,
+    "Noto Serif SC",
+    "Microsoft YaHei",
+    serif;
+  color: #f1dfac;
+  letter-spacing: 0.08em;
+}
+.game-table .theatre-line-heading button {
+  padding: 0 6px;
+  border: none;
+  background: none;
+  color: #d8ca95;
+  font-size: 11px;
+  min-height: 22px;
+}
+.theatre-line p {
+  margin: 8px 0 0;
+  height: 72px;
+  overflow: auto;
+  font:
+    17px/1.8 "Microsoft YaHei",
+    sans-serif;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  scrollbar-color: #8a9c77 transparent;
+}
+.theatre-await p {
+  height: auto;
+}
+.theatre-await small {
+  color: #a9bdae;
+}
+.theatre-controls {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  background: #f6f6ec;
+  color: #345346;
+  border-top: 1px solid #bbc5ac;
+}
+.theatre-identities {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.game-table .theatre-identities button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  max-width: 125px;
+  min-height: 29px;
+  padding: 2px 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #345346;
+}
+.game-table .theatre-identities button.selected {
+  background: #dde8d3;
+  border-color: #849e79;
+}
+.theatre-identities button span:not(.portrait) {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+.theatre-identities .portrait {
+  width: 23px;
+  height: 26px;
+  object-fit: contain;
+  border-radius: 2px;
+  font-size: 13px;
+}
+.theatre-control-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+.game-table .theatre-control-actions button,
+.theatre-control-actions select {
+  min-height: 28px;
+  padding: 3px 6px;
+  font-size: 11px;
+  background: #fafbf3;
+  color: #345346;
+}
+.theatre-control-actions select {
+  width: 98px;
+}
+.game-table .theatre-peek {
+  position: absolute;
+  z-index: 13;
+  top: 8px;
+  right: 10px;
+  padding: 5px 10px;
+  min-height: 29px;
+  border-color: #c3c69e;
+  color: #304d41;
+  background: #faf9eced;
+  font-size: 12px;
+}
+.theatre-peek span {
+  margin-left: 10px;
+}
+/* The action workbench stays usable; performance resumes when it closes. */
+.stage:has(.battle-workbench) .theatre-overlay {
+  display: none;
+}
+.stage:has(.theatre-overlay):not(:has(.battle-workbench)) .battle-team,
+.stage:has(.theatre-overlay):not(:has(.battle-workbench)) .battle-crossline {
+  opacity: 0.25;
+  transition: opacity 0.25s ease;
+}
+.theatre-overlay.still *,
+.reduce-motion .theatre-actor {
+  animation: none !important;
+  transition: none !important;
+}
+.chat-theatre-hint {
+  display: block;
+  color: #507348;
+  padding: 0 2px 3px;
+}
+.theatre-setup .modal-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.theatre-setup .modal-body > p {
+  margin: 0 0 12px;
+}
+.theatre-picker-tools {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.theatre-picker-tools input {
+  flex: 1;
+  min-width: 0;
+}
+.theatre-picker-tools select {
+  width: 135px;
+}
+.theatre-picker-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  min-height: 0;
+  height: min(430px, 50dvh);
+}
+.theatre-picker-list,
+.theatre-order {
+  overflow: auto;
+  min-width: 0;
+  padding-right: 4px;
+}
+.theatre-picker-list > button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  text-align: left;
+  gap: 10px;
+  margin-bottom: 5px;
+  padding: 6px 9px;
+}
+.theatre-picker-list > button[aria-pressed="true"] {
+  background: #e1ebd6;
+  border-color: #7b9978;
+}
+.theatre-picker-list .portrait {
+  width: 36px;
+  height: 43px;
+  object-fit: contain;
+}
+.theatre-picker-list button > span:not(.portrait) {
+  flex: 1;
+  min-width: 0;
+}
+.theatre-picker-list strong,
+.theatre-picker-list small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.theatre-order > strong {
+  display: block;
+  margin-bottom: 10px;
+}
+.theatre-order > strong small {
+  color: #6d8067;
+  float: right;
+}
+.theatre-order > div {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 0;
+  border-bottom: 1px solid #d9ddcb;
+}
+.theatre-order > div > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.theatre-order button {
+  padding: 3px 6px;
+}
+.theatre-order > small {
+  display: block;
+  margin-top: 16px;
+  line-height: 1.8;
+  color: #6a7967;
+}
+.theatre-picker-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid #cbd4bc;
+  padding-top: 14px;
+  margin-top: 14px;
+}
+.theatre-picker-footer > span {
+  color: #6c7d65;
+  font-size: 12px;
+}
+@keyframes theatre-enter {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (max-width: 1050px) {
+  .theatre-controls {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .theatre-identities {
+    flex-basis: 100%;
+  }
+  .theatre-control-actions {
+    justify-content: flex-end;
+    flex: 1;
+  }
+  .theatre-overlay.over-play {
+    height: min(460px, 74%);
+  }
+}
+@media (max-height: 700px) {
+  .theatre-line {
+    height: 110px;
+    padding: 8px 24px;
+  }
+  .theatre-line p {
+    height: 57px;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+  .theatre-speaker {
+    font-size: 18px;
+  }
+}
+@media (max-width: 650px) {
+  .theatre-portraits {
+    gap: 0;
+    padding: 0 2%;
+  }
+  .game-table button.theatre-name {
+    font-size: 11px;
+    padding: 2px;
+  }
+  .theatre-line {
+    padding-left: 20px;
+    padding-right: 12px;
+  }
+  .theatre-picker-columns {
+    grid-template-columns: 1fr;
+    height: 55dvh;
+    grid-template-rows: 1fr 1fr;
+  }
+  .theatre-control-actions select {
+    width: 80px;
+  }
+  .theatre-control-actions {
+    flex-wrap: wrap;
+  }
+  .theatre-launch {
+    padding: 5px;
+    font-size: 11px;
+  }
+  .theatre-launch svg {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .theatre-overlay * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+.theatre-pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: auto;
+  white-space: nowrap;
+}
+@media (max-width: 650px) {
+  .game-table button.theatre-name {
+    font-size: 14px;
+  }
+}
+
+.map-stage .theatre-peek {
+  top: 48px;
+}

@@ -5,6 +5,7 @@ import { Empty } from "./Common";
 import { DiceControls } from "./DiceControls";
 import { sendsOnEnter } from "../lib/chat-input";
 import { useUnreadLogs } from "../lib/useUnreadLogs";
+import { useTheatreSpeaker } from "./TheatreContext";
 import "../styles/chat-tools.css";
 
 export function StoryLog({
@@ -24,6 +25,7 @@ export function StoryLog({
   toggle: () => void;
   onUnread: (value: boolean) => void;
 }) {
+  const theatreIdentity = useTheatreSpeaker();
   const [text, setText] = useState(""),
     [busy, setBusy] = useState(false),
     [filter, setFilter] = useState<keyof typeof LOG_CHANNELS>("ic"),
@@ -35,6 +37,15 @@ export function StoryLog({
   const actors = world.characters.filter(
     (c) => c.public && (me.role === "gm" || c.owner === me.id),
   );
+  const theatreScene = world.scenes.find((s) => s.id === world.activeScene);
+  const narrator = actorId === "@narrator" && me.role === "gm";
+  useEffect(() => {
+    if (theatreIdentity.speaker !== null) {
+      setActor(theatreIdentity.speaker || "@narrator");
+      setMode("ic");
+      setFilter("ic");
+    }
+  }, [theatreIdentity.selection]);
   const actor =
     actors.find((c) => c.id === actorId) ??
     actors.find((c) => c.kind === "pc" && c.owner === me.id) ??
@@ -58,7 +69,12 @@ export function StoryLog({
     if (id === "ic" || id === "ooc") setMode(id);
   }
   async function send() {
-    if (!text.trim() || sending.current || (mode === "ic" && !actor)) return;
+    if (
+      !text.trim() ||
+      sending.current ||
+      (mode === "ic" && !actor && !narrator)
+    )
+      return;
     sending.current = true;
     const sent = text;
     setBusy(true);
@@ -68,7 +84,7 @@ export function StoryLog({
           type: "chat",
           text,
           channel: mode,
-          actor: mode === "ic" ? actor?.id : undefined,
+          actor: mode === "ic" ? (narrator ? "" : actor?.id) : undefined,
         })
       ) {
         setText((current) => (current === sent ? "" : current));
@@ -237,9 +253,15 @@ export function StoryLog({
           {mode === "ic" ? (
             <select
               aria-label="发言角色"
-              value={actor?.id ?? ""}
-              onChange={(e) => setActor(e.target.value)}
+              value={narrator ? "@narrator" : (actor?.id ?? "")}
+              onChange={(e) => {
+                setActor(e.target.value);
+                theatreIdentity.chooseSpeaker(
+                  e.target.value === "@narrator" ? "" : e.target.value,
+                );
+              }}
             >
+              {me.role === "gm" && <option value="@narrator">旁白</option>}
               {actors.length ? (
                 actors.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -262,6 +284,13 @@ export function StoryLog({
             ⚄ 掷骰
           </button>
         </div>
+        {theatreScene?.theatre && mode === "ic" && (
+          <small className="chat-theatre-hint">
+            {narrator || theatreScene.cast.some((c) => c.actor === actor?.id)
+              ? "✦ 本句同步到小剧场"
+              : "该角色未登场 · 本句只发送到场内聊天"}
+          </small>
+        )}
         <textarea
           aria-label="聊天内容"
           placeholder="写下此刻想说的话……"
@@ -280,7 +309,9 @@ export function StoryLog({
           <small>Enter 发送 · Shift+Enter 换行</small>
           <button
             className="primary"
-            disabled={busy || !text.trim() || (mode === "ic" && !actor)}
+            disabled={
+              busy || !text.trim() || (mode === "ic" && !actor && !narrator)
+            }
           >
             {busy ? "发送中" : "发送"}
           </button>

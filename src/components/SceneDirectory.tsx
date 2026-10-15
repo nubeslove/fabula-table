@@ -5,7 +5,7 @@ import type { Command, Scene, World } from "../shared/types";
 import { newScene } from "../shared/rules";
 import { api, download, uid } from "../lib/api";
 
-const modes = { stage: "演出", map: "探索", battle: "冲突" };
+const modes = { stage: "贴图", map: "探索", battle: "冲突" };
 export function SceneDirectory({
   world: w,
   urls,

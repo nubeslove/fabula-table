@@ -37,7 +37,7 @@ export function SceneEditor({
             disabled={!!s.exploration?.active}
             onChange={(e) => edit("mode", e.target.value as Scene["mode"])}
           >
-            <option value="stage">演出舞台</option>
+            <option value="stage">贴图场景</option>
             <option value="map">探索地图</option>
             <option value="battle">冲突舞台</option>
           </select>

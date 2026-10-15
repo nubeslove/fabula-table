@@ -13,6 +13,7 @@ import { api, apiUrl, uid } from "./lib/api";
 import { useAssets } from "./lib/media";
 import { Modal } from "./components/Common";
 import { Stage } from "./components/Stage";
+import { TheatreProvider } from "./components/TheatreContext";
 import { CharacterEditor } from "./components/CharacterEditor";
 import { SceneEditor } from "./components/SceneEditor";
 import { Preload } from "./components/Resources";
@@ -191,70 +192,72 @@ function Table({ initial, leave }: { initial: Session; leave: () => void }) {
           再次进入可能需要重新下载；完成预下载时请先处理缓存问题。
         </div>
       )}
-      <main className={`table-layout ${showLog ? "chat-open" : ""}`}>
-        <div className="workspace">
-          <Stage
-            actionError={error}
-            openClock={(id, placement) =>
-              setClockWindow({ id, scene: current?.id, placement })
-            }
-            session={session}
-            urls={assets.urls}
-            act={act}
-            hud={
-              <ClockStrip
-                clocks={w.clocks}
-                act={act}
-                gm={gm}
-                open={(id) => setClockWindow({ id })}
-              />
-            }
-            record={() => record()}
-            tools={() => {
-              setToolsTab("角色行动");
-              setPage("工具");
-            }}
-            configureBattle={() => {
-              setToolsTab("冲突回合");
-              setPage("工具");
-            }}
-            prepare={() =>
-              current && setScene({ scene: current, isNew: false })
-            }
-          />
-          {page !== "舞台" && (
-            <TableDrawer title={page} close={() => setPage("舞台")}>
-              <TablePanels
-                session={session}
-                page={page}
-                toolsTab={toolsTab}
-                urls={assets.urls}
-                act={act}
-                create={create}
-                setEditing={setEditing}
-                setScene={setScene}
-                setNotes={setNotes}
-                setJournalDraft={setJournalDraft}
-                record={record}
-                receive={receive}
-                setError={setError}
-                setPage={setPage}
-              />
-            </TableDrawer>
-          )}
-        </div>
-        <aside className={`table-sidebar ${showLog ? "is-open" : ""}`}>
-          <StoryLog
-            session={session}
-            act={act}
-            extract={record}
-            onUnread={setUnreadChat}
-            openJournal={() => setPage("日志")}
-            expanded={showLog}
-            toggle={() => setShowLog(!showLog)}
-          />
-        </aside>
-      </main>
+      <TheatreProvider key={w.id} onChoose={() => setShowLog(true)}>
+        <main className={`table-layout ${showLog ? "chat-open" : ""}`}>
+          <div className="workspace">
+            <Stage
+              actionError={error}
+              openClock={(id, placement) =>
+                setClockWindow({ id, scene: current?.id, placement })
+              }
+              session={session}
+              urls={assets.urls}
+              act={act}
+              hud={
+                <ClockStrip
+                  clocks={w.clocks}
+                  act={act}
+                  gm={gm}
+                  open={(id) => setClockWindow({ id })}
+                />
+              }
+              record={() => record()}
+              tools={() => {
+                setToolsTab("角色行动");
+                setPage("工具");
+              }}
+              configureBattle={() => {
+                setToolsTab("冲突回合");
+                setPage("工具");
+              }}
+              prepare={() =>
+                current && setScene({ scene: current, isNew: false })
+              }
+            />
+            {page !== "舞台" && (
+              <TableDrawer title={page} close={() => setPage("舞台")}>
+                <TablePanels
+                  session={session}
+                  page={page}
+                  toolsTab={toolsTab}
+                  urls={assets.urls}
+                  act={act}
+                  create={create}
+                  setEditing={setEditing}
+                  setScene={setScene}
+                  setNotes={setNotes}
+                  setJournalDraft={setJournalDraft}
+                  record={record}
+                  receive={receive}
+                  setError={setError}
+                  setPage={setPage}
+                />
+              </TableDrawer>
+            )}
+          </div>
+          <aside className={`table-sidebar ${showLog ? "is-open" : ""}`}>
+            <StoryLog
+              session={session}
+              act={act}
+              extract={record}
+              onUnread={setUnreadChat}
+              openJournal={() => setPage("日志")}
+              expanded={showLog}
+              toggle={() => setShowLog(!showLog)}
+            />
+          </aside>
+        </main>
+      </TheatreProvider>
       <FirstCharacterPrompt
         session={session}
         create={() => create()}

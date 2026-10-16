@@ -5,6 +5,7 @@ import { Field, ErrorText, Modal } from "./Common";
 import { ExpansionPicker } from "./ExpansionPicker";
 import { ServerAdmin } from "./ServerAdmin";
 import { SoundSettings } from "./InterfaceSound";
+import { LobbyPrelude } from "./LobbyPrelude";
 interface RoomCard {
   legacy: boolean;
   id: string;
@@ -101,173 +102,176 @@ export function Lobby({ enter }: { enter: (s: Session) => void }) {
         )}
       </header>
       {adminOpen && <ServerAdmin close={() => setAdminOpen(false)} />}
-      {!data ? (
-        <div className="loading">
-          正在寻找故事…
-          <ErrorText text={error} />
-        </div>
-      ) : !data.account ? (
-        <section className="lobby-auth">
-          <div>
-            <span className="brand-symbol">✦</span>
-            <h2>回到我们的故事</h2>
-            <p>登录一次，在不同世界间自由往来。角色与手记会在这里等你。</p>
-          </div>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void run(async () => {
-                await api("account/" + auth, { name, password });
-                setPassword("");
-                await load();
-              });
-            }}
-          >
-            <div className="tabs">
-              <button
-                type="button"
-                className={auth === "login" ? "selected" : ""}
-                onClick={() => setAuth("login")}
-              >
-                登录
-              </button>
-              <button
-                type="button"
-                className={auth === "register" ? "selected" : ""}
-                onClick={() => setAuth("register")}
-              >
-                注册账号
-              </button>
-            </div>
-            <Field label="账号名">
-              <input
-                required
-                maxLength={60}
-                autoComplete="username"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </Field>
-            <Field label="账号密码" hint="至少 8 位；世界密码由 GM 单独设置。">
-              <input
-                required
-                minLength={8}
-                maxLength={200}
-                type="password"
-                autoComplete={
-                  auth === "login" ? "current-password" : "new-password"
-                }
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </Field>
+      <div className="lobby-layout">
+        <LobbyPrelude />
+        {!data ? (
+          <div className="loading">
+            正在寻找故事…
             <ErrorText text={error} />
-            <button className="primary full" disabled={busy}>
-              {busy ? "请稍候…" : auth === "login" ? "进入大厅" : "建立账号"}
-            </button>
-            <p className="muted">
-              从旧版本升级？先注册统一账号，随后在世界条目中选择“认领旧身份”。
-            </p>
-          </form>
-        </section>
-      ) : (
-        <>
-          <div className="lobby-toolbar">
-            <div className="tabs">
-              {[
-                ["all", "所有世界"],
-                ["recent", "我加入的"],
-                ["mine", "我主持的"],
-              ].map(([id, label]) => (
-                <button
-                  key={id}
-                  className={filter === id ? "selected" : ""}
-                  onClick={() => setFilter(id)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <input
-              aria-label="搜索世界"
-              placeholder="寻找一个故事…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <button onClick={() => void load()}>刷新</button>
-            <button className="primary" onClick={() => open("create")}>
-              ＋ 创建世界
-            </button>
           </div>
-          <ErrorText text={dialog ? "" : error} />
-          {data.legacy && (
-            <div className="notice">
-              已找到原来的身份：{data.legacy.title} · {data.legacy.name}
-              <button
-                onClick={() =>
-                  open(
-                    "claim",
-                    data.rooms.find((r) => r.id === data.legacy!.room),
-                  )
-                }
+        ) : !data.account ? (
+          <section className="lobby-auth">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void run(async () => {
+                  await api("account/" + auth, { name, password });
+                  setPassword("");
+                  await load();
+                });
+              }}
+            >
+              <h2>回到我们的故事</h2>
+              <p>登录后，继续你的旅程。</p>
+              <div className="tabs">
+                <button
+                  type="button"
+                  className={auth === "login" ? "selected" : ""}
+                  onClick={() => setAuth("login")}
+                >
+                  登录
+                </button>
+                <button
+                  type="button"
+                  className={auth === "register" ? "selected" : ""}
+                  onClick={() => setAuth("register")}
+                >
+                  注册账号
+                </button>
+              </div>
+              <Field label="账号名">
+                <input
+                  required
+                  maxLength={60}
+                  autoComplete="username"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </Field>
+              <Field
+                label="账号密码"
+                hint="至少 8 位；世界密码由 GM 单独设置。"
               >
-                绑定到当前账号
+                <input
+                  required
+                  minLength={8}
+                  maxLength={200}
+                  type="password"
+                  autoComplete={
+                    auth === "login" ? "current-password" : "new-password"
+                  }
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </Field>
+              <ErrorText text={error} />
+              <button className="primary full" disabled={busy}>
+                {busy ? "请稍候…" : auth === "login" ? "进入大厅" : "建立账号"}
+              </button>
+              <p className="muted">
+                从旧版本升级？先注册统一账号，随后在世界条目中选择“认领旧身份”。
+              </p>
+            </form>
+          </section>
+        ) : (
+          <section className="lobby-collection" aria-label="世界目录">
+            <div className="lobby-toolbar">
+              <div className="tabs">
+                {[
+                  ["all", "所有世界"],
+                  ["recent", "我加入的"],
+                  ["mine", "我主持的"],
+                ].map(([id, label]) => (
+                  <button
+                    key={id}
+                    className={filter === id ? "selected" : ""}
+                    onClick={() => setFilter(id)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <input
+                aria-label="搜索世界"
+                placeholder="寻找一个故事…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <button onClick={() => void load()}>刷新</button>
+              <button className="primary" onClick={() => open("create")}>
+                ＋ 创建世界
               </button>
             </div>
-          )}
-          <section className="lobby-rooms" aria-label="世界列表">
-            {rooms.length ? (
-              rooms.map((r) => (
-                <article className="lobby-room" key={r.id}>
-                  <div className="lobby-world-mark">✦</div>
-                  <div>
-                    <small>
-                      {r.role === "gm"
-                        ? "由你主持"
-                        : r.role
-                          ? "继续旅程"
-                          : r.locked
-                            ? "密码世界"
-                            : "开放世界"}
-                    </small>
-                    <h2>{r.title}</h2>
-                    <p>
-                      {r.members} 位成员 ·{" "}
-                      {r.expansions.length
-                        ? `${r.expansions.length} 个扩展`
-                        : "核心规则"}
-                    </p>
-                  </div>
-                  <div className="lobby-room-actions">
-                    <button
-                      className="primary"
-                      disabled={busy}
-                      onClick={() =>
-                        r.role || !r.locked
-                          ? void run(async () =>
-                              enter(await api("enter", { room: r.id })),
-                            )
-                          : open("join", r)
-                      }
-                    >
-                      {r.role ? "返回世界" : "进入世界"}
-                    </button>
-                    {r.legacy && r.role !== "gm" && (
-                      <button onClick={() => open("claim", r)}>
-                        认领旧身份
-                      </button>
-                    )}
-                  </div>
-                </article>
-              ))
-            ) : (
-              <div className="empty">
-                这里还没有匹配的世界。创建世界，为故事点亮第一盏灯。
+            <ErrorText text={dialog ? "" : error} />
+            {data.legacy && (
+              <div className="notice">
+                已找到原来的身份：{data.legacy.title} · {data.legacy.name}
+                <button
+                  onClick={() =>
+                    open(
+                      "claim",
+                      data.rooms.find((r) => r.id === data.legacy!.room),
+                    )
+                  }
+                >
+                  绑定到当前账号
+                </button>
               </div>
             )}
+            <section className="lobby-rooms" aria-label="世界列表">
+              {rooms.length ? (
+                rooms.map((r) => (
+                  <article className="lobby-room" key={r.id}>
+                    <div className="lobby-world-mark">✦</div>
+                    <div>
+                      <small>
+                        {r.role === "gm"
+                          ? "由你主持"
+                          : r.role
+                            ? "继续旅程"
+                            : r.locked
+                              ? "密码世界"
+                              : "开放世界"}
+                      </small>
+                      <h2>{r.title}</h2>
+                      <p>
+                        {r.members} 位成员 ·{" "}
+                        {r.expansions.length
+                          ? `${r.expansions.length} 个扩展`
+                          : "核心规则"}
+                      </p>
+                    </div>
+                    <div className="lobby-room-actions">
+                      <button
+                        className="primary"
+                        disabled={busy}
+                        onClick={() =>
+                          r.role || !r.locked
+                            ? void run(async () =>
+                                enter(await api("enter", { room: r.id })),
+                              )
+                            : open("join", r)
+                        }
+                      >
+                        {r.role ? "返回世界" : "进入世界"}
+                      </button>
+                      {r.legacy && r.role !== "gm" && (
+                        <button onClick={() => open("claim", r)}>
+                          认领旧身份
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <div className="empty">
+                  这里还没有匹配的世界。创建世界，为故事点亮第一盏灯。
+                </div>
+              )}
+            </section>
           </section>
-        </>
-      )}
+        )}
+      </div>
       {dialog && (
         <Modal
           title={

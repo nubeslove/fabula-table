@@ -1,0 +1,552 @@
+/* Approved Court treatment. Ornament lives in backgrounds with reserved gutters,
+   never in a foreground layer over text, form fields, or scrolling readers. */
+:root {
+  --green: #3a5640;
+  --deep: #304b37;
+  --gold: #8a652f;
+  --paper: #fffbee;
+  --border: #d5ccb0;
+  --muted: #707b65;
+  --court-gold: #bfa66a;
+  --court-ink: #354d36;
+  --court-top:
+    url("../assets/court/court-tl.svg"), url("../assets/court/court-tr.svg");
+  --court-corners:
+    url("../assets/court/court-tl.svg"), url("../assets/court/court-tr.svg"),
+    url("../assets/court/court-bl.svg"), url("../assets/court/court-br.svg");
+  --court-weave:
+    repeating-linear-gradient(45deg, #9a844a07 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(-45deg, #9a844a09 0 1px, transparent 1px 4px);
+  color: var(--court-ink);
+  background: #f2efdf;
+}
+
+button {
+  border-radius: 4px;
+}
+button.primary {
+  border-color: #a38c4d;
+  background: linear-gradient(#4b6850, #36533e);
+  color: #fff9e7;
+  box-shadow:
+    inset 0 0 0 2px #d6d29530,
+    inset 0 2px #e3e7c738;
+}
+button.primary:hover:not(:disabled) {
+  background: #294b36;
+  border-color: #b29a56;
+}
+input:not([type="checkbox"]):not([type="range"]):not([type="color"]):not(
+    [type="file"]
+  ),
+select,
+textarea {
+  border-color: #c8c5a8;
+  background-color: #fffef7;
+  box-shadow: inset 0 2px 4px #4b60330b;
+  border-radius: 4px;
+}
+textarea {
+  background-image: none;
+}
+.eyebrow {
+  color: #817044;
+}
+
+/* Covers and directory: the illustration is decorative; all rooms are live data. */
+.fu-lobby {
+  padding: 18px clamp(12px, 2.5vw, 40px);
+  gap: 18px;
+  background: var(--court-weave), #f2efdf;
+  color: var(--court-ink);
+}
+.lobby-header {
+  gap: 12px;
+  padding-bottom: 12px;
+  border-color: var(--court-gold);
+}
+.lobby-header > div:first-child {
+  margin-right: auto;
+}
+.lobby-header h1 {
+  font-family: "SimSun", "Songti SC", serif;
+  letter-spacing: 0.12em;
+}
+.lobby-header .button-row {
+  gap: 8px;
+}
+.lobby-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+  gap: clamp(18px, 2.5vw, 36px);
+  flex: 1;
+  min-height: 0;
+}
+.lobby-prelude {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 0;
+  padding: 100px 60px;
+  border: 3px double var(--court-gold);
+  background:
+    var(--court-corners),
+    linear-gradient(90deg, #f5f4e7ed, #eef1dfb5 65%, #e5eddd77),
+    url("../assets/court/observatory.svg");
+  background-position:
+    left top,
+    right top,
+    left bottom,
+    right bottom,
+    center,
+    center;
+  background-size:
+    100px 100px,
+    100px 100px,
+    100px 100px,
+    100px 100px,
+    cover,
+    cover;
+  background-repeat: no-repeat;
+  box-shadow:
+    inset 0 0 0 4px #fff8,
+    0 4px 18px #58492116;
+}
+.court-crest {
+  position: absolute;
+  top: 38px;
+  right: 42px;
+  width: 110px;
+  height: 130px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #a28e5133;
+  border-radius: 5% 5% 48% 48%;
+  font:
+    90px Georgia,
+    serif;
+  color: #92936132;
+  transform: rotate(-5deg);
+  pointer-events: none;
+}
+.prelude-copy {
+  position: relative;
+}
+.prelude-copy h2 {
+  font:
+    500 clamp(27px, 2.6vw, 44px) / 1.65 "SimSun",
+    "Songti SC",
+    serif;
+  letter-spacing: 0.08em;
+  margin: 20px 0 8px;
+  text-shadow: 0 1px #fff;
+}
+.prelude-copy p {
+  font-size: 14px;
+  line-height: 2;
+  color: #62765e;
+  margin: 16px 0 0;
+}
+.court-flourish {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 180px;
+  color: var(--gold);
+}
+.court-flourish::before {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, #8a652f, #b9ab6f44);
+}
+.lobby-prelude footer {
+  position: absolute;
+  left: 60px;
+  right: 60px;
+  bottom: 32px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  color: #62765e;
+}
+.lobby-collection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  min-width: 0;
+}
+.lobby-toolbar {
+  gap: 8px;
+}
+.lobby-toolbar > .tabs {
+  width: 100%;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+.lobby-toolbar .tabs button {
+  background: transparent;
+  border-color: transparent;
+  border-radius: 0;
+}
+.lobby-toolbar .tabs button.selected {
+  color: var(--gold);
+  border-bottom: 2px solid var(--court-gold);
+}
+.lobby-rooms {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 12px;
+  padding: 2px 6px 6px 2px;
+}
+.lobby-room {
+  flex: none;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 16px;
+  padding: 24px 36px;
+  border: 3px double var(--court-gold);
+  border-radius: 3px;
+  background:
+    var(--court-corners), var(--court-weave),
+    linear-gradient(120deg, #fffffa, #f6efd8);
+  background-position:
+    left top,
+    right top,
+    left bottom,
+    right bottom,
+    center,
+    center,
+    center;
+  background-size:
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    auto,
+    auto,
+    cover;
+  background-repeat:
+    no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, no-repeat;
+  box-shadow: 0 3px 10px #58492114;
+}
+.lobby-room > div:nth-child(2) {
+  min-width: 0;
+}
+.lobby-room h2 {
+  font-family: "SimSun", "Songti SC", serif;
+  line-height: 1.5;
+}
+.lobby-world-mark {
+  display: grid;
+  place-items: center;
+  height: 58px;
+  width: 46px;
+  font-size: 26px;
+  border: 3px double var(--court-gold);
+  border-radius: 4px 4px 40% 40%;
+  color: #6c7b51;
+  background: linear-gradient(135deg, #f8efcc, #e4dfc6);
+}
+.lobby-room-actions {
+  width: auto;
+  flex-direction: column;
+  align-items: stretch;
+}
+.lobby-auth {
+  display: block;
+  width: 100%;
+  max-width: 500px;
+  margin: auto;
+  padding: 6px;
+}
+.lobby-auth form {
+  border: 3px double var(--court-gold);
+  border-radius: 4px;
+  padding: 28px;
+  background: var(--court-weave), var(--paper);
+}
+.lobby-auth h2 {
+  font:
+    26px/1.5 "SimSun",
+    serif;
+  margin: 0 0 6px;
+}
+.lobby-auth p {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Fine material on chrome; stage art and transparent actors stay untouched. */
+.game-table,
+.game-table .workspace {
+  background: #efeedf;
+}
+.table-header,
+.game-table .scene-caption,
+.game-table .table-sidebar,
+.game-table .log-panel,
+.chat-compose,
+.theatre-controls,
+.theatre-tool-panel,
+.battle-workbench,
+.table-drawer,
+.modal {
+  background-color: var(--paper);
+  background-image: var(--court-weave);
+  color: var(--court-ink);
+  border-color: var(--court-gold);
+}
+.table-header {
+  box-shadow:
+    inset 0 3px #fff9,
+    inset 0 4px #ac975930;
+}
+.game-table .scene-caption {
+  color: var(--court-ink);
+}
+.table-drawer,
+.modal {
+  border: 3px double var(--court-gold);
+  border-radius: 4px;
+}
+.battle-workbench {
+  border-top: 3px double var(--court-gold);
+}
+.workbench-header,
+.table-drawer > header,
+.modal > header {
+  background-image: var(--court-top), linear-gradient(#fffbea, #eee8d4);
+  background-position:
+    left top,
+    right top,
+    center;
+  background-size:
+    32px 32px,
+    32px 32px,
+    cover;
+  background-repeat: no-repeat;
+  padding-left: 36px;
+  padding-right: 36px;
+  border-bottom-color: var(--border);
+  box-shadow:
+    inset 0 -3px #fff7,
+    inset 0 -4px #a7955820;
+}
+.game-table .modal > header,
+.table-drawer > header {
+  padding-inline: 36px;
+}
+.workbench-person strong,
+.table-drawer > header h2,
+.modal > header h2 {
+  font-family: "SimSun", "Songti SC", serif;
+}
+.game-table .log-panel > header {
+  background:
+    url("../assets/court/court-tl.svg") left top / 28px 28px no-repeat,
+    linear-gradient(#fffbea, #eee8d4);
+  padding: 10px 12px 10px 30px;
+  box-shadow:
+    inset 0 -3px #fff7,
+    inset 0 -4px #a7955820;
+}
+.game-table .log-filter {
+  padding-top: 8px;
+}
+.game-table .log-scroll {
+  padding-inline: 16px;
+}
+.log-entry {
+  border-color: #d5ccb080;
+}
+.game-table .chat-compose {
+  border-top: 3px double #c6bd96;
+  padding: 8px 12px 10px;
+}
+.game-table .chat-compose textarea {
+  padding: 9px 11px;
+}
+.workbench-tabs {
+  background: #faf6e7;
+}
+.workbench-tabs button[aria-pressed="true"] {
+  background: #e8eddc;
+  border-bottom-color: #9a8143;
+}
+.basic-action-grid button {
+  background: linear-gradient(135deg, #faf8e9, #e7ecda);
+  border-color: #c5bf98;
+  box-shadow: inset 0 0 0 2px #fff6;
+}
+.basic-action-grid button:hover:not(:disabled) {
+  background: #dfe8d1;
+}
+
+/* The VN box reserves 46px at either edge for its 40px scrollwork.
+   The text scroller is fully inside that gutter, even on its last line. */
+.theatre-dialogue-shell {
+  background: var(--court-weave), #fffaeef5;
+  color: var(--court-ink);
+  border-top: 3px double var(--court-gold);
+  box-shadow: 0 -6px 20px #18392c18;
+}
+.theatre-line {
+  height: 130px;
+  padding: 10px 46px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background-image: var(--court-corners);
+  background-position:
+    left top,
+    right top,
+    left bottom,
+    right bottom;
+  background-size: 40px 40px;
+  background-repeat: no-repeat;
+}
+.theatre-line::before {
+  display: none;
+}
+.theatre-line-heading {
+  flex: none;
+}
+.theatre-speaker {
+  color: #fff9e7;
+  background: #3a5640;
+  border: 3px double #d2b775;
+  border-radius: 2px 2px 9px 9px;
+  padding: 3px 14px;
+  font-size: 18px;
+  align-self: flex-start;
+}
+.theatre-line p {
+  height: auto;
+  min-height: 0;
+  flex: 1;
+  margin: 0;
+  padding-right: 8px;
+  color: var(--court-ink);
+  scrollbar-gutter: stable;
+}
+.game-table .theatre-line-heading button {
+  color: #75602f;
+}
+.theatre-await small {
+  color: #707b65;
+}
+.theatre-controls {
+  border-top: 1px solid #c6bd96;
+}
+.theatre-tool-panel {
+  border-top: 3px double #c6bd96;
+}
+
+@media (max-width: 1100px) {
+  .lobby-layout {
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr);
+    gap: 18px;
+  }
+  .lobby-prelude {
+    padding-inline: 42px;
+  }
+  .prelude-copy h2 {
+    font-size: 29px;
+  }
+  .lobby-room {
+    padding: 20px 30px;
+    gap: 12px;
+    grid-template-columns: 40px minmax(0, 1fr);
+    background-size:
+      26px 26px,
+      26px 26px,
+      26px 26px,
+      26px 26px,
+      auto,
+      auto,
+      cover;
+  }
+  .lobby-room-actions {
+    grid-column: 2;
+    flex-direction: row;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  .lobby-world-mark {
+    width: 40px;
+  }
+  .lobby-prelude footer {
+    left: 42px;
+    right: 42px;
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 850px), (max-height: 560px) {
+  .lobby-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lobby-prelude {
+    display: none;
+  }
+  .lobby-auth {
+    max-height: 100%;
+  }
+  .lobby-room {
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+  }
+  .lobby-room-actions {
+    grid-column: auto;
+    flex-direction: column;
+  }
+}
+@media (max-width: 600px) {
+  .fu-lobby {
+    padding: 10px;
+    gap: 12px;
+  }
+  .lobby-header {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .lobby-header h1 {
+    font-size: 24px;
+  }
+  .lobby-header .button-row {
+    gap: 6px;
+  }
+  .lobby-header button {
+    padding: 6px 9px;
+  }
+  .lobby-room {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+  .lobby-room-actions {
+    grid-column: 2;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .workbench-header {
+    padding-inline: 24px;
+    background-size:
+      20px 20px,
+      20px 20px,
+      cover;
+  }
+  .theatre-line {
+    padding-inline: 32px;
+    background-size: 26px 26px;
+  }
+  .theatre-speaker {
+    font-size: 16px;
+    padding-inline: 10px;
+  }
+}
+@media (max-height: 700px) {
+  .theatre-line {
+    height: 110px;
+  }
+}

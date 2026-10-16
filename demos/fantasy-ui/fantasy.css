@@ -181,7 +181,7 @@ button:hover {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 9;
+  z-index: 0;
   background-image: var(--motif);
   background-repeat: no-repeat;
   background-position:
@@ -896,6 +896,44 @@ body[data-theme] .utility > .fantasy-edges {
 [data-theme="court"] .dialogue-name {
   border: 3px double #d2b775;
   border-radius: 2px 2px 12px 12px;
+}
+/* Keep scrollwork in a dedicated gutter; never paint a frame over text. */
+body[data-theme] .dialogue {
+  padding: 22px 64px 34px;
+  isolation: isolate;
+}
+body[data-theme] .dialogue > .fantasy-edges {
+  background-size: 56px 56px;
+  z-index: -1;
+}
+body[data-theme] .dialogue-name {
+  left: 64px;
+  z-index: 1;
+}
+body[data-theme] .dialogue button {
+  right: 62px;
+  bottom: 7px;
+}
+body[data-theme] .dialogue p {
+  margin: 0;
+}
+/* Other bounded readers use ornament only at the top, outside their text gutter. */
+body[data-theme] :is(.sheet, .chat, .utility) > .fantasy-edges {
+  height: 34px;
+  background-image: var(--motif);
+  background-size:
+    28px 28px,
+    28px 28px,
+    0 0,
+    0 0;
+  border: 0;
+  box-shadow: none;
+}
+body[data-theme] :is(.sheet, .utility) > header {
+  padding-inline: 36px;
+}
+body[data-theme] .chat > header {
+  padding-inline: 34px;
 }
 @media (max-height: 780px) {
   .fantasy-lobby {
